@@ -51,7 +51,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 
 		oldQueries, err := cache.GetUserQueries(h.Redis, ctx, "12345678", int64(5))
 
-		geminiResp := gemini.GetResponse(request, oldQueries)
+		geminiResp := gemini.GetResponse(*h.Config, request, oldQueries)
 
 		if geminiResp.Route == "gemini" {
 			err = conn.WriteJSON(map[string]any{
@@ -66,7 +66,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 		}
 
 		if geminiResp.ExpectsMultiple {
-			if err := sonar.StreamToWS(h.UseCase, conn, request, geminiResp.EnrichedQuery, chatRoomID); err != nil {
+			if err := sonar.StreamToWS(*h.Config, h.UseCase, conn, request, geminiResp.EnrichedQuery, chatRoomID); err != nil {
 				_ = conn.WriteJSON(map[string]any{
 					"type":  "error",
 					"error": fmt.Sprintf("Sonar error: %v", err),
@@ -74,7 +74,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 				return
 			}
 		} else {
-			if err := sonar.StreamToWSOneOrg(h.UseCase, conn, request, geminiResp.EnrichedQuery, chatRoomID); err != nil {
+			if err := sonar.StreamToWSOneOrg(*h.Config, h.UseCase, conn, request, geminiResp.EnrichedQuery, chatRoomID); err != nil {
 				_ = conn.WriteJSON(map[string]any{
 					"type":  "error",
 					"error": fmt.Sprintf("Sonar error: %v", err),

@@ -1,6 +1,7 @@
 package gemini
 
 import (
+	"chatbot/config"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -18,8 +19,8 @@ type GeminiResponse struct {
 	ExpectsMultiple bool   `json:"expects_multiple,omitempty"`
 }
 
-func GetResponse(userQuestion string, oldQueries []string) *GeminiResponse {
-	geminiClient, err := genai.NewClient(context.Background(), option.WithAPIKey("AIzaSyAx-V87orBR12iXp8bfJUj_Uf1pEmMts8Q"))
+func GetResponse(cfg config.Config, userQuestion string, oldQueries []string) *GeminiResponse {
+	geminiClient, err := genai.NewClient(context.Background(), option.WithAPIKey(cfg.ApiKey.Key))
 	if err != nil {
 		slog.Error("failed to create Gemini client", "error", err)
 		return nil

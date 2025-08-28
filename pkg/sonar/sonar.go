@@ -2,6 +2,7 @@ package sonar
 
 import (
 	"bytes"
+	"chatbot/config"
 	"chatbot/internal/entity"
 	"chatbot/internal/usecase"
 	"encoding/json"
@@ -13,7 +14,6 @@ import (
 )
 
 const (
-	pplxAPIKey = "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"
 	pplxAPIURL = "https://api.perplexity.ai/chat/completions"
 )
 
@@ -40,7 +40,7 @@ If you cannot confirm the accuracy of the information or cannot locate a trustwo
 Return the answer only in the language of the question given
 `
 
-func StreamToWS(db *usecase.UseCase, conn *websocket.Conn, userQuestion, geminiQuestion, chatRoomId string) error {
+func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, userQuestion, geminiQuestion, chatRoomId string) error {
 	payload := map[string]any{
 		"model": "sonar",
 		"messages": []map[string]string{
@@ -89,7 +89,7 @@ func StreamToWS(db *usecase.UseCase, conn *websocket.Conn, userQuestion, geminiQ
 
 	req, _ := http.NewRequest("POST", pplxAPIURL, bytes.NewBuffer(mustJSON(payload)))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+pplxAPIKey)
+	req.Header.Set("Authorization", "Bearer "+cfg.PerplexityAPIKey.Key)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

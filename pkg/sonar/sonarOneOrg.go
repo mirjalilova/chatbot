@@ -3,6 +3,7 @@ package sonar
 import (
 	"bufio"
 	"bytes"
+	"chatbot/config"
 	"chatbot/internal/entity"
 	"chatbot/internal/usecase"
 	"context"
@@ -46,7 +47,7 @@ type ppStreamChunk struct {
 	} `json:"error,omitempty"`
 }
 
-func StreamToWSOneOrg(db *usecase.UseCase, conn *websocket.Conn, userQuestion, geminiQuestion, chatRoomId string) error {
+func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, userQuestion, geminiQuestion, chatRoomId string) error {
 	fmt.Println("Processing request for one organization (SSE stream)...")
 
 	payload := map[string]any{
@@ -67,7 +68,7 @@ func StreamToWSOneOrg(db *usecase.UseCase, conn *websocket.Conn, userQuestion, g
 
 	req, _ := http.NewRequest("POST", pplxAPIURL, bytes.NewBuffer(mustJSON(payload)))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+pplxAPIKey)
+	req.Header.Set("Authorization", "Bearer "+cfg.PerplexityAPIKey.Key)
 	req.Header.Set("Accept", "text/event-stream")
 
 	resp, err := http.DefaultClient.Do(req)

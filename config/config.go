@@ -9,12 +9,13 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App    `yaml:"app"`
-		HTTP   `yaml:"http"`
-		Log    `yaml:"logger"`
-		PG     `yaml:"postgres"`
-		ApiKey `yaml:"api_key"`
-		JWT    `yaml:"jwt"`
+		App              `yaml:"app"`
+		HTTP             `yaml:"http"`
+		Log              `yaml:"logger"`
+		PG               `yaml:"postgres"`
+		ApiKey           `yaml:"api_key"`
+		JWT              `yaml:"jwt"`
+		PerplexityAPIKey `yaml:"perplexity_api_key"`
 		// OpenAI `yaml:"openai"`
 	}
 
@@ -48,6 +49,11 @@ type (
 	// JWT -.
 	JWT struct {
 		Secret string `env-required:"true" yaml:"secret" env:"JWT_SECRET"`
+	}
+
+	// PerplexityAPIKey -.
+	PerplexityAPIKey struct {
+		Key string `env-required:"true" yaml:"key" env:"PERPLEXITY_API_KEY"`
 	}
 
 	// // OpenAI -.
