@@ -1,0 +1,64 @@
+definitions:
+  main.AskRequest:
+    properties:
+      question:
+        type: string
+    type: object
+  main.DataItem:
+    properties:
+      address:
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      sources:
+        items:
+          type: string
+        type: array
+      website:
+        type: string
+    type: object
+  main.Response:
+    properties:
+      citations:
+        items:
+          type: string
+        type: array
+      data:
+        items:
+          $ref: '#/definitions/main.DataItem'
+        type: array
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /ask:
+    post:
+      consumes:
+      - application/json
+      description: Ask a question to the chatbot
+      parameters:
+      - description: Question
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.AskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Response'
+      summary: Ask a question
+      tags:
+      - ask
+swagger: "2.0"

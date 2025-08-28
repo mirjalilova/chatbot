@@ -1,0 +1,556 @@
+basePath: /
+definitions:
+  entity.Chat:
+    properties:
+      chat_room_id:
+        description: UserID     string `json:"user_id"`
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      request:
+        type: string
+      response:
+        type: string
+    type: object
+  entity.ChatList:
+    properties:
+      chats:
+        items:
+          $ref: '#/definitions/entity.Chat'
+        type: array
+    type: object
+  entity.ChatRoom:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  entity.ChatRoomCreate:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  entity.ChatRoomList:
+    properties:
+      chat_rooms:
+        items:
+          $ref: '#/definitions/entity.ChatRoom'
+        type: array
+      count:
+        type: integer
+    type: object
+  entity.CreateUser:
+    properties:
+      full_name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  entity.LoginReq:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  entity.LoginRes:
+    properties:
+      message:
+        type: string
+      token:
+        type: string
+    type: object
+  entity.Restriction:
+    properties:
+      character_limit:
+        type: integer
+      chat_limit:
+        type: integer
+      id:
+        type: string
+      request_limit:
+        type: integer
+      type:
+        type: string
+    type: object
+  entity.UpdateRestrictionBody:
+    properties:
+      character_limit:
+        type: integer
+      chat_limit:
+        type: integer
+      request_limit:
+        type: integer
+    required:
+    - request_limit
+    type: object
+  entity.UpdateUserBody:
+    properties:
+      full_name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  entity.UserInfo:
+    properties:
+      created_at:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  entity.UserList:
+    properties:
+      count:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/entity.UserInfo'
+        type: array
+    type: object
+info:
+  contact: {}
+  description: This is a sample server Imzo AI server.
+  title: Imzo AI API
+  version: "1.0"
+paths:
+  /chat/message:
+    get:
+      consumes:
+      - application/json
+      description: Get chat room by ID
+      parameters:
+      - description: Chat Room ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ChatList'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get chat room by ID
+      tags:
+      - Chat
+  /chat/room/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new chat room with the user id
+      parameters:
+      - description: Chat Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/entity.ChatRoomCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new chat room
+      tags:
+      - Chat
+  /chat/room/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a chat room by ID
+      parameters:
+      - description: Chat Room ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a chat room
+      tags:
+      - Chat
+  /chat/user_id:
+    get:
+      consumes:
+      - application/json
+      description: Get chat room by user ID
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.ChatRoomList'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get chat room by user ID
+      tags:
+      - Chat
+  /restrictions/get:
+    get:
+      consumes:
+      - application/json
+      description: Get restriction by ID
+      parameters:
+      - description: Restriction ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Restriction'
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get restriction by ID
+      tags:
+      - Restrictions
+  /restrictions/list:
+    get:
+      consumes:
+      - application/json
+      description: Get list of restrictions
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Restriction'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get all restrictions
+      tags:
+      - Restrictions
+  /restrictions/update:
+    put:
+      consumes:
+      - application/json
+      description: Update an existing restriction
+      parameters:
+      - description: Restriction ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Update data
+        in: body
+        name: restriction
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateRestrictionBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Restriction updated successfully
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a restriction
+      tags:
+      - Restrictions
+  /users/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a User by ID
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a User
+      tags:
+      - Users
+  /users/get:
+    get:
+      consumes:
+      - application/json
+      description: Get a User by their ID
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UserInfo'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get User by ID
+      tags:
+      - Users
+  /users/list:
+    get:
+      consumes:
+      - application/json
+      description: Get all Users with optional filtering
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: User Status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.UserList'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get all Users
+      tags:
+      - Users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: User login with phone number and password
+      parameters:
+      - description: User Login Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/entity.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.LoginRes'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: User login
+      tags:
+      - Users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the provided details
+      parameters:
+      - description: User Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CreateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new user
+      tags:
+      - Users
+  /users/update:
+    put:
+      consumes:
+      - application/json
+      description: Update a User's details
+      parameters:
+      - description: User ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: User Update Details
+        in: body
+        name: User
+        required: true
+        schema:
+          $ref: '#/definitions/entity.UpdateUserBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a User
+      tags:
+      - Users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

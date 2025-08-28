@@ -1,0 +1,53 @@
+services:
+  app:
+    build: .
+    container_name: "chatbot_app"
+    env_file:
+      - .env
+    ports:
+      - 8080:8080
+    networks:
+      - chatbot_ntwrk  
+    environment:
+      - TZ=Asia/Tashkent
+    depends_on:
+      chatbot_db:
+        condition: service_started
+  
+  chatbot_db:
+    image: postgres:latest
+    container_name: chatbot_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1111
+      POSTGRES_DB: chatbot
+    ports:
+      - "5446:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chatbot_ntwrk
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      - chatbot_db
+    volumes:
+      - ./migrations:/migrations
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      sleep 5 &&
+      migrate -path=/migrations -database=${PG_URL} up
+    environment:
+      - DATABASE_URL=${PG_URL}
+    networks:
+      - chatbot_ntwrk
+
+networks:
+  chatbot_ntwrk: 
+    external: true
+
+
+volumes:
+  postgres_data:
+    driver: local
+

@@ -1,0 +1,11 @@
+p, unauthorized, /,                                GET
+
+p, unauthorized, /users/login,               GET
+
+
+p, user, /ask, POST
+
+p, admin, *, *
+
+g, user, unauthorized
+g, admin, user
