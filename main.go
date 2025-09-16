@@ -1,112 +1,74 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"log/slog"
-	"net/http"
+	"log"
+	"strings"
+	"time"
 
-	"chatbot/pkg/cache"
-	"chatbot/pkg/gemini"
-	"chatbot/pkg/sonar"
-
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-
-	"github.com/redis/go-redis/v9"
+	"github.com/tebeka/selenium"
+	"github.com/tebeka/selenium/chrome"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true }}
-
 func main() {
+	caps := selenium.Capabilities{"browserName": "chrome"}
+	chromeCaps := chrome.Capabilities{
+		Args: []string{
+			"--disable-gpu",
+			"--no-sandbox",
+			// "--headless", // uncomment to run in headless mode
+		},
+	}
+	caps.AddChrome(chromeCaps)
 
-	ctx := context.Background()
+	wd, err := selenium.NewRemote(caps, "http://localhost:9515/wd/hub")
+	if err != nil {
+		log.Fatalf("Failed to connect to ChromeDriver: %v", err)
+	}
+	defer wd.Quit()
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "4545",
-		DB:       0,
-	})
+	url := "https://yandex.uz/maps/org/175039152082"
+	fmt.Println("Navigating to:", url)
+	if err := wd.Get(url); err != nil {
+		log.Fatalf("Failed to open URL: %v", err)
+	}
 
-	r := gin.Default()
+	time.Sleep(5 * time.Second)
 
-	r.Static("/assets", "./public")
-	r.GET("/", func(c *gin.Context) {
-		c.File("./public/index.html")
-	})
+	shareBtn, err := wd.FindElement(selenium.ByCSSSelector, "button[aria-label='Baham ko‘rish']")
+	if err != nil {
+		log.Fatalf("Share button not found: %v", err)
+	}
 
-	r.GET("/ws", func(c *gin.Context) {
-		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-		if err != nil {
-			fmt.Println("WebSocket upgrade error:", err)
-			return
-		}
-		defer conn.Close()
+	if err := shareBtn.Click(); err != nil {
+		log.Fatalf("Failed to click share button: %v", err)
+	}
 
-		_, msg, err := conn.ReadMessage()
-		if err != nil {
-			fmt.Println("WS read error:", err)
-			return
-		}
-		userQuestion := string(msg)
+	time.Sleep(2 * time.Second)
 
-		go func() {
-			if err := cache.AppendUserQuery(rdb, ctx, "12345678", userQuestion); err != nil {
-				slog.Warn("Failed to append user query", "error", err)
-			}
-		}()
+	elems, err := wd.FindElements(selenium.ByCSSSelector, "div.card-share-view__text")
+	if err != nil {
+		log.Fatalf("No elements found: %v", err)
+	}
 
-		oldQueries, err := cache.GetUserQueries(rdb, ctx, "12345678", int64(5))
+	if len(elems) < 2 {
+		log.Fatalf("Coordinates not found")
+	}
 
-		geminiResp := gemini.GetResponse(userQuestion, oldQueries)
+	coords, err := elems[1].Text()
+	if err != nil {
+		log.Fatalf("Failed to extract coordinates text: %v", err)
+	}
 
-		if geminiResp.Route == "gemini" {
-			_ = conn.WriteJSON(map[string]any{
-				"responce": geminiResp.Explanation,
-			})
-			return
-		}
+	fmt.Println("Extracted coordinates:", coords)
 
-		systemPrompt := `
-Respond to user queries by retrieving and presenting information on organizations in Uzbekistan only from reliable, verifiable sources (e.g., official government registries, reputable news outlets, recognized business directories, or accredited databases).
+	parts := strings.Split(coords, ",")
+	if len(parts) == 2 {
+		lat := strings.TrimSpace(parts[0])
+		lng := strings.TrimSpace(parts[1])
+		fmt.Printf("Latitude: %s\nLongitude: %s\n", lat, lng)
+	} else {
+		log.Fatalf("Invalid coordinates format: %s", coords)
+	}
 
-Response Guidelines:
-
-Source Reliability: Only provide information if it can be verified by at least one reliable source.
-
-Transparency: Always cite the source(s) in your response.
-
-No Guesswork: If no reliable source is found, clearly state: "No reliable information available." Do not speculate, fabricate, or infer details.
-
-Geographic Scope: Only return results about organizations physically located in Uzbekistan.
-
-Relevance: Ensure the information directly answers the user's request without unrelated details.
-
-Neutrality: Present information factually and without bias. Avoid opinions or promotional language.
-
-Fail-safe Rule:
-If you cannot confirm the accuracy of the information or cannot locate a trustworthy source, you must respond with:
-"No reliable information available."
-`
-		if geminiResp.ExpectsMultiple {
-			if err := sonar.StreamToWS(conn, geminiResp.EnrichedQuery, systemPrompt); err != nil {
-				_ = conn.WriteJSON(map[string]any{
-					"type":  "error",
-					"error": fmt.Sprintf("Sonar error: %v", err),
-				})
-				return
-			}
-		} else {
-			if err := sonar.StreamToWSOneOrg(conn, geminiResp.EnrichedQuery, systemPrompt); err != nil {
-				_ = conn.WriteJSON(map[string]any{
-					"type":  "error",
-					"error": fmt.Sprintf("Sonar error: %v", err),
-				})
-				return
-			}
-		}
-	})
-
-	_ = r.Run(":8080")
 }

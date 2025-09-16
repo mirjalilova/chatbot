@@ -43,15 +43,17 @@ func (h *Handler) ChatWS(c *gin.Context) {
 		}
 		request := req.Message
 
+		
+		oldQueries, err := cache.GetUserQueries(h.Redis, ctx, "12345678", int64(5))
+		fmt.Println("Old queries:", oldQueries)
+		
+		geminiResp := gemini.GetResponse(*h.Config, request, oldQueries)
+
 		go func() {
-			if err := cache.AppendUserQuery(h.Redis, ctx, "12345678", request); err != nil {
+			if err := cache.AppendUserQuery(h.Redis, ctx, "12345678", geminiResp.EnrichedQuery); err != nil {
 				slog.Warn("Failed to append user query", "error", err)
 			}
 		}()
-
-		oldQueries, err := cache.GetUserQueries(h.Redis, ctx, "12345678", int64(5))
-
-		geminiResp := gemini.GetResponse(*h.Config, request, oldQueries)
 
 		if geminiResp.Route == "gemini" {
 			err = conn.WriteJSON(map[string]any{

@@ -6,11 +6,13 @@ import (
 	"chatbot/config"
 	"chatbot/internal/entity"
 	"chatbot/internal/usecase"
+	"chatbot/pkg/coords"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -45,7 +47,42 @@ type ppStreamChunk struct {
 		Message string `json:"message"`
 		Type    string `json:"type"`
 	} `json:"error,omitempty"`
+	Location *struct {
+		Lat float64 `json:"lat"`
+		Lng float64 `json:"lng"`
+	} `json:"location,omitempty"`
 }
+
+// var systemPrompt2 = `
+// Respond to user queries by retrieving and presenting information on organizations in Uzbekistan only from reliable, verifiable sources (e.g., official registries, business directories, or government databases).
+
+// Response Guidelines:
+
+// 1. **Organization Info**: Provide factual details (name, address, phone number, services, etc.) ONLY if verified by reliable sources.
+// 2. **Location**: Determine the location of the organization and return its latitude and longitude. Please note that the location of the organization must be returned and it is important that it is correct.
+//    "location": {
+//       "lat": <latitude>,
+//       "lng": <longitude>
+//    }
+//    - If exact coordinates are not available, try to approximate using Google Maps or official references.
+//    - If no coordinates are available, respond with:
+//      "location": null
+// 3. **Sources**: Always include citation links for the information you provide.
+// 4. **No Guesswork**: Do not invent or speculate details. If not available from reliable sources, clearly state: "No reliable information available."
+// 5. **Geographic Scope**: Limit results strictly to organizations physically located in Uzbekistan.
+// 6. **Language**: Respond in the same language as the user's question.
+// 7. **Output Format**:
+//    - Stream partial text as plain chunks for user readability.
+//    - At the end, return a final JSON block containing:
+//      {
+//        "text": "<full answer text>",
+//        "citations": [<list of source URLs>],
+//        "location": {
+//           "lat": <latitude>,
+//           "lng": <longitude>
+//        }
+//      }
+// `
 
 func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, userQuestion, geminiQuestion, chatRoomId string) error {
 	fmt.Println("Processing request for one organization (SSE stream)...")
@@ -54,7 +91,7 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 		"model": "sonar",
 		"messages": []map[string]string{
 			{"role": "system", "content": systemPrompt},
-			{"role": "user", "content": userQuestion},
+			{"role": "user", "content": geminiQuestion},
 		},
 		"web_search_options": map[string]any{
 			"user_location":       map[string]string{"country": "UZ"},
@@ -136,22 +173,90 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 				})
 			}
 		}
-
 	}
+
 	if err := scanner.Err(); err != nil && err != io.EOF {
 		return fmt.Errorf("stream read error: %v", err)
+	}
+
+	var locations []map[string]float64
+
+	for _, v := range citations {
+		if strings.Contains(v, "maps.google.com") || strings.Contains(v, "google.com/maps") {
+			// Google Maps linkidan latitude/longitude ajratib olish
+			u, err := url.Parse(v)
+			if err != nil {
+				continue
+			}
+
+			// Ko‘pincha qidiruv natijasi qatorida @41.311158,69.279737 ko‘rinishida keladi
+			if strings.Contains(u.Path, "@") {
+				parts := strings.Split(u.Path, "@")
+				if len(parts) > 1 {
+					coords := strings.Split(parts[1], ",")
+					if len(coords) >= 2 {
+						lat := coords[0]
+						lng := coords[1]
+						locations = append(locations, map[string]float64{
+							"lat": parseFloat(lat),
+							"lng": parseFloat(lng),
+						})
+					}
+				}
+			}
+
+			// Agar query orqali keladigan holatlar bo‘lsa (misol: ?q=41.2995,69.2401)
+			q := u.Query().Get("q")
+			if q != "" {
+				coords := strings.Split(q, ",")
+				if len(coords) >= 2 {
+					lat := coords[0]
+					lng := coords[1]
+					locations = append(locations, map[string]float64{
+						"lat": parseFloat(lat),
+						"lng": parseFloat(lng),
+					})
+				}
+			}
+		} else if strings.Contains(v, "https://yandex.uz/maps/org") || strings.Contains(v, "https://yandex.com/maps/org") {
+
+			fmt.Println(v)
+			lat, lng, err := coords.ExtractCoordinates(v)
+			fmt.Println("Yandex coords:", lat, lng, "Error:", err)
+			if err == nil {
+				fmt.Println("Got coords from Yandex:", lat, lng)
+				locations = append(locations, map[string]float64{
+					"lat": lat,
+					"lng": lng,
+				})
+			}
+		}
+	}
+
+	var finalLocation any
+	if len(locations) > 0 {
+		finalLocation = locations[0]
+	} else {
+		finalLocation = nil
 	}
 
 	_ = conn.WriteJSON(map[string]any{
 		"data": map[string]any{
 			"text":      fullText,
 			"citations": citations,
+			"location":  finalLocation,
 		},
 	})
 
 	go SaveResponce(db, userQuestion, chatRoomId, fullText, geminiQuestion, citations)
 
 	return nil
+}
+
+func parseFloat(s string) float64 {
+	var f float64
+	fmt.Sscanf(strings.TrimSpace(s), "%f", &f)
+	return f
 }
 
 func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, userQuestion, geminiQuestion, chatRoomId string) error {
@@ -201,10 +306,6 @@ func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, 
 	return nil
 }
 
-/*************  ✨ Windsurf Command ⭐  *************/
-// SaveResponce saves a chat log with the given request, chat room ID, response,
-// Gemini request, and citation URLs.
-/*******  7e881605-fe22-4492-bdeb-47cb86f30523  *******/
 func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_request string, citation_urls []string) {
 
 	db.ChatRepo.Create(context.Background(), &entity.ChatCreate{

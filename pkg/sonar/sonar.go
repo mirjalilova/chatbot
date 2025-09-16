@@ -45,7 +45,7 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 		"model": "sonar",
 		"messages": []map[string]string{
 			{"role": "system", "content": systemPrompt},
-			{"role": "user", "content": userQuestion},
+			{"role": "user", "content": geminiQuestion},
 		},
 		"web_search_options": map[string]any{
 			"user_location":       map[string]string{"country": "UZ"},
@@ -64,6 +64,14 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 						"properties": map[string]any{
 							"name":        map[string]string{"type": "string"},
 							"address":     map[string]string{"type": "string"},
+							"location": map[string]any{
+								"type": "object",
+								"properties": map[string]any{
+									"latitude": map[string]string{"type": "number"},
+									"longitude": map[string]string{"type": "number"},
+								},
+								"required": []string{"latitude", "longitude"},
+							},
 							"phone":       map[string]string{"type": "string"},
 							"email":       map[string]string{"type": "string"},
 							"description": map[string]string{"type": "string"},

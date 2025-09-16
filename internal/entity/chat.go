@@ -50,8 +50,12 @@ type MessageResponse struct {
 }
 
 type OrgInfo struct {
-	Name        string   `json:"name"`
-	Address     string   `json:"address"`
+	Name     string `json:"name"`
+	Address  string `json:"address"`
+	Location struct {
+		Latitude  float64 `json:"latitude"`
+		Longitude float64 `json:"longitude"`
+	} `json:"location"`
 	Phone       string   `json:"phone,omitempty"`
 	Email       string   `json:"email,omitempty"`
 	Description string   `json:"description,omitempty"`

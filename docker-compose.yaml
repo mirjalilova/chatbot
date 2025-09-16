@@ -13,6 +13,31 @@ services:
     depends_on:
       chatbot_db:
         condition: service_started
+      selenium:
+        condition: service_healthy
+  
+  selenium: 
+    image: selenium/standalone-chrome:latest
+    container_name: selenium
+    ports:
+      - "4444:4444"
+    shm_size: 2g
+    networks:
+      - chatbot_ntwrk
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+
+  redis:
+    container_name: redis
+    image: redis:7
+    ports:
+      - "6379:6379"
+    networks:
+      - chatbot_ntwrk
   
   chatbot_db:
     image: postgres:latest

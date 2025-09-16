@@ -11,6 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/generative-ai-go/genai"
 	"github.com/redis/go-redis/v9"
+	"github.com/tebeka/selenium"
+	"github.com/tebeka/selenium/chrome"
 	"google.golang.org/api/option"
 
 	"chatbot/config"
@@ -54,6 +56,16 @@ func Run(cfg *config.Config) {
 	// Use case
 	useCase := usecase.New(pg, cfg)
 
+	caps := selenium.Capabilities{"browserName": "chrome"}
+	chromeCaps := chrome.Capabilities{
+		Args: []string{
+			"--disable-gpu",
+			"--no-sandbox",
+			"--headless",
+		},
+	}
+	caps.AddChrome(chromeCaps)
+
 	// Gemini
 	ctx := context.Background()
 	gemini_client, err := genai.NewClient(ctx, option.WithAPIKey(cfg.ApiKey.Key))
@@ -63,7 +75,7 @@ func Run(cfg *config.Config) {
 	defer gemini_client.Close()
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "redis:6379",
 		Password: "4545",
 		DB:       0,
 	})
