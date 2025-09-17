@@ -6,7 +6,10 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
+# RUN go install github.com/swaggo/swag/cmd/swag@latest
+
 COPY . .
+# RUN swag init -g cmd/main.go -o ./docs 
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags migrate -o chatbot ./cmd
 
@@ -20,6 +23,7 @@ RUN apk add --no-cache ca-certificates tzdata
 COPY --from=builder /app/chatbot /app/chatbot
 COPY --from=builder /app/config /app/config
 COPY --from=builder /app/migrations /app/migrations
+COPY --from=builder /app/docs /app/docs 
 COPY --from=builder /app/internal/controller/http/casbin/model.conf ./internal/controller/http/casbin/
 COPY --from=builder /app/internal/controller/http/casbin/policy.csv ./internal/controller/http/casbin/
 

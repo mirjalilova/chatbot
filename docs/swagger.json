@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is a sample server Imzo AI server.",
-        "title": "Imzo AI API",
+        "description": "This is a sample server Chatbot server.",
+        "title": "Chatbot API",
         "contact": {},
         "version": "1.0"
     },

@@ -36,8 +36,8 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 
 // NewRouter -.
 // Swagger spec:
-// @title       Imzo AI API
-// @description This is a sample server Imzo AI server.
+// @title       Chatbot API
+// @description This is a sample server Chatbot server.
 // @version     1.0
 // @BasePath    /
 // @securityDefinitions.apikey BearerAuth
@@ -46,7 +46,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCase, gemini_client *genai.Client, rdb *redis.Client) {
 	// Options
 	engine.Use(gin.Logger())
-	engine.Use(gin.Recovery())
+	// engine.Use(gin.Recovery())
 
 	handlerV1 := handler.NewHandler(config, useCase, gemini_client, rdb)
 	// Initialize Casbin enforcer
@@ -59,8 +59,9 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 		AllowCredentials: true,
 	}))
 
-	engine.Use(TimeoutMiddleware(1 * time.Minute))
-	url := ginSwagger.URL("swagger/doc.json") // The url pointing to API definition
+	engine.Use(TimeoutMiddleware(5 * time.Minute))
+
+	url := ginSwagger.URL("/swagger/doc.json") // The url pointing to API definition
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	// K8s probe
 	engine.GET("/healthz", func(c *gin.Context) { c.Status(http.StatusOK) })

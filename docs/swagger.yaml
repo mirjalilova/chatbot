@@ -122,8 +122,8 @@ definitions:
     type: object
 info:
   contact: {}
-  description: This is a sample server Imzo AI server.
-  title: Imzo AI API
+  description: This is a sample server Chatbot server.
+  title: Chatbot API
   version: "1.0"
 paths:
   /chat/message:

@@ -887,8 +887,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Imzo AI API",
-	Description:      "This is a sample server Imzo AI server.",
+	Title:            "Chatbot API",
+	Description:      "This is a sample server Chatbot server.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }
