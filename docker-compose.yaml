@@ -52,6 +52,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - chatbot_ntwrk
+      
   migrate:
     image: migrate/migrate
     depends_on:

@@ -16,12 +16,7 @@ package handler
 // 	"github.com/gin-gonic/gin"
 // 	"github.com/golang-jwt/jwt"
 // 	"github.com/google/uuid"
-// 	"github.com/gorilla/websocket"
 // )
-
-// var upgrader = websocket.Upgrader{
-// 	CheckOrigin: func(r *http.Request) bool { return true },
-// }
 
 // // Ask godoc
 // // @Summary Send a message to OpenAI Assistant
@@ -75,24 +70,11 @@ package handler
 
 // 	oldQueries, err := cache.GetUserQueries(h.Redis, ctx, user_id, int64(5))
 
-// 	geminiResp := gemini.GetResponse(req.Request, oldQueries)
+// 	geminiResp := gemini.GetResponse(*h.Config, req.Message, oldQueries)
 // 	chat_id := uuid.New().String()
 
 // 	if geminiResp.Route == "gemini" {
-// 		r.GET(fmt.Sprintf("/ws/%s", chat_id), func(c *gin.Context) {
-
-// 			go func() {
-// 				if err := cache.AppendUserQuery(h.Redis, ctx, "12345678", req.Request); err != nil {
-// 					slog.Warn("Failed to append user query", "error", err)
-// 				}
-// 			}()
-
-// 			_ = conn.WriteJSON(map[string]any{
-// 				"responce": geminiResp.Explanation,
-// 			})
-// 			slog.Info("Gemini response", "explanation", geminiResp.Explanation)
-// 			return
-// 		})
+// 		c.JSON(http.StatusOK, gin.H{"responce": geminiResp.Explanation})
 // 	}
 
 // 	if geminiResp.ExpectsMultiple {

@@ -71,3 +71,7 @@ type Response struct {
 type Request struct {
 	Message string `json:"message"`
 }
+
+type AskRequest struct {
+	Message string `json:"message" binding:"required"`
+}
