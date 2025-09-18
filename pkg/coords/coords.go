@@ -16,6 +16,15 @@ const (
 
 func ExtractCoordinates(url string) (float64, float64, error) {
 	caps := selenium.Capabilities{"browserName": "chrome"}
+	chromeArgs := []string{
+		"--disable-dev-shm-usage",
+		"--no-sandbox",
+		"--lang=uz",
+	}
+	chromeCaps := map[string]interface{}{
+		"args": chromeArgs,
+	}
+	caps["goog:chromeOptions"] = chromeCaps
 
 	fmt.Println("Connecting to Selenium WebDriver at", seleniumURL)
 
