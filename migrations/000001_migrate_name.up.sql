@@ -50,7 +50,8 @@ INSERT INTO restrictions (type, request_limit, character_limit, chat_limit, time
 ('admin', 0, 0, 0, 0),
 ('pro-user', 0, 0, 0, 0);
 
-
+INSERT INTO users (id, full_name, phone_number, password) VALUES
+('00000000-0000-0000-0000-000000000000', 'admin', '+998979004416', '$2a$10$hQIviMhEdjuyAAKYsImr6uw9739a96iQNfJhox/lx/7foJzsKR9JW'); -- password is 'adminpassword'
 
 
 CREATE OR REPLACE FUNCTION update_all_chat_room_titles()
