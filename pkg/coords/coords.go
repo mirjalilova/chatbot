@@ -2,6 +2,7 @@ package coords
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	seleniumURL = "http://selenium:4444/wd/hub" 
+	seleniumURL = "http://selenium:4444/wd/hub"
 )
 
 func ExtractCoordinates(url string) (float64, float64, error) {
@@ -34,12 +35,17 @@ func ExtractCoordinates(url string) (float64, float64, error) {
 
 	time.Sleep(5 * time.Second)
 
-	shareBtn, err := wd.FindElement(selenium.ByCSSSelector, "button[aria-label='Baham ko‘rish']")
-	fmt.Println("Share button found:", err)
+	wd.SetImplicitWaitTimeout(10 * time.Second)
+
+	shareBtn, err := wd.FindElement(selenium.ByXPATH,
+		"//button[contains(., 'Baham ko‘rish')] | //button[contains(., 'Поделиться')] | //button[contains(., 'Share')]")
 	if err == nil {
 		_ = shareBtn.Click()
 		time.Sleep(2 * time.Second)
 	}
+
+	buf, _ := wd.Screenshot()
+	os.WriteFile("debug.png", buf, 0644)
 
 	elems, err := wd.FindElements(selenium.ByCSSSelector, "div.card-share-view__text")
 	fmt.Println("Coords elements found:", err)
@@ -73,4 +79,3 @@ func ExtractCoordinates(url string) (float64, float64, error) {
 
 	return 0, 0, fmt.Errorf("coordinates not found")
 }
-
