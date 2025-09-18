@@ -21,7 +21,8 @@ services:
     container_name: selenium
     ports:
       - "4444:4444"
-    shm_size: 2g
+      - "7900:7900" 
+    shm_size: 2gb
     networks:
       - chatbot_ntwrk
     healthcheck:
