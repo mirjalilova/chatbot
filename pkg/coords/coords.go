@@ -47,11 +47,16 @@ func ExtractCoordinates(url string) (float64, float64, error) {
 	buf, _ := wd.Screenshot()
 	os.WriteFile("debug.png", buf, 0644)
 
+	wd.SetImplicitWaitTimeout(15 * time.Second)
+
 	elems, err := wd.FindElements(selenium.ByCSSSelector, "div.card-share-view__text")
 	fmt.Println("Coords elements found:", err)
 	if err != nil {
 		return 0, 0, fmt.Errorf("coords element not found: %w", err)
 	}
+
+	src, _ := wd.PageSource()
+	fmt.Println(src)
 
 	for _, el := range elems {
 		txt, _ := el.Text()
