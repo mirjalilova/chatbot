@@ -73,3 +73,4 @@ func ExtractCoordinates(url string) (float64, float64, error) {
 
 	return 0, 0, fmt.Errorf("coordinates not found")
 }
+
