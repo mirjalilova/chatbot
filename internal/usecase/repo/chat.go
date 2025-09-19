@@ -166,7 +166,7 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 }
 
 func (r *ChatRepo) DeleteChatRoom(ctx context.Context, id *entity.ById) error {
-	query := `DELETE from chat_rooms WHERE id = $1`
+	query := `UPDATE chat_rooms SET deleted_at = EXTRACT(EPOCH FROM NOW())::bigint WHERE id = $1`
 	_, err := r.pg.Pool.Exec(ctx, query, id.Id)
 	if err != nil {
 		return err
