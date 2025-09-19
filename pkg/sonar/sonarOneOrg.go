@@ -183,13 +183,11 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 
 	for _, v := range citations {
 		if strings.Contains(v, "maps.google.com") || strings.Contains(v, "google.com/maps") {
-			// Google Maps linkidan latitude/longitude ajratib olish
 			u, err := url.Parse(v)
 			if err != nil {
 				continue
 			}
 
-			// Ko‘pincha qidiruv natijasi qatorida @41.311158,69.279737 ko‘rinishida keladi
 			if strings.Contains(u.Path, "@") {
 				parts := strings.Split(u.Path, "@")
 				if len(parts) > 1 {
@@ -205,7 +203,6 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 				}
 			}
 
-			// Agar query orqali keladigan holatlar bo‘lsa (misol: ?q=41.2995,69.2401)
 			q := u.Query().Get("q")
 			if q != "" {
 				coords := strings.Split(q, ",")
@@ -233,18 +230,18 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 		}
 	}
 
-	var finalLocation any
+	var finalLocations []map[string]float64
 	if len(locations) > 0 {
-		finalLocation = locations[0]
+		finalLocations = locations
 	} else {
-		finalLocation = nil
+		finalLocations = nil
 	}
 
 	_ = conn.WriteJSON(map[string]any{
 		"data": map[string]any{
 			"text":      fullText,
 			"citations": citations,
-			"location":  finalLocation,
+			"location":  finalLocations,
 		},
 	})
 
