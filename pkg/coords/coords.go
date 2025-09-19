@@ -2,7 +2,6 @@ package coords
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -25,7 +24,6 @@ func ExtractCoordinates(url string) (float64, float64, error) {
 		"args": chromeArgs,
 	}
 	caps["goog:chromeOptions"] = chromeCaps
-
 	fmt.Println("Connecting to Selenium WebDriver at", seleniumURL)
 
 	wd, err := selenium.NewRemote(caps, seleniumURL)
@@ -34,6 +32,14 @@ func ExtractCoordinates(url string) (float64, float64, error) {
 	}
 	defer wd.Quit()
 
+	if !strings.Contains(url, "lang=uz") {
+		if strings.Contains(url, "?") {
+			url += "&lang=uz"
+		} else {
+			url += "?lang=uz"
+		}
+	}
+
 	fmt.Println("Navigating to:", url)
 
 	if err := wd.Get(url); err != nil {
@@ -41,70 +47,51 @@ func ExtractCoordinates(url string) (float64, float64, error) {
 	}
 
 	fmt.Println("Waiting for page to load...")
-	wd.SetImplicitWaitTimeout(10 * time.Second)
 
-	// Cookie popup tugmasini yopish
-	cookieBtn, err := wd.FindElement(selenium.ByXPATH,
-		"//div[contains(@class,'gdpr-popup-v3-button')]")
-	if err == nil {
-		fmt.Println("Cookie popup found, clicking...")
-		_ = cookieBtn.Click()
-		time.Sleep(2 * time.Second)
-	} else {
-		fmt.Println("No cookie popup found:", err)
-	}
+	time.Sleep(5 * time.Second)
 
-	// Share tugmasini bosish
-	shareBtn, err := wd.FindElement(selenium.ByXPATH,
-		"//button[contains(., 'Baham ko‘rish')] | //button[contains(., 'Поделиться')] | //button[contains(., 'Share')]")
+	shareBtn, err := wd.FindElement(selenium.ByCSSSelector, "button[aria-label='Baham ko‘rish']")
+	fmt.Println("Share button found:", err)
 	if err == nil {
 		_ = shareBtn.Click()
 		time.Sleep(2 * time.Second)
-	} else {
-		fmt.Println("Share button not found:", err)
 	}
 
-	// Debug uchun screenshot
-	buf, _ := wd.Screenshot()
-	_ = os.WriteFile("debug.png", buf, 0644)
+	var elems []selenium.WebElement
 
-	// 1️⃣ Variant: div.card-share-view__text dan olish
-	elems, _ := wd.FindElements(selenium.ByCSSSelector, "div.card-share-view__text")
+	for i := 0; i < 10; i++ {
+		elems, _ = wd.FindElements(selenium.ByCSSSelector, "div.card-share-view__text")
+		if len(elems) > 0 {
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	fmt.Println("Coords elements found:", err)
+	if err != nil {
+		return 0, 0, fmt.Errorf("coords element not found: %w", err)
+	}
+
 	for _, el := range elems {
 		txt, _ := el.Text()
 		fmt.Println("Coords element found:", txt)
 		if strings.Contains(txt, ",") {
 			parts := strings.Split(txt, ",")
+			fmt.Println("Coords element parts found:", parts)
 			if len(parts) == 2 {
 				latStr := strings.TrimSpace(parts[0])
 				lngStr := strings.TrimSpace(parts[1])
 
+				fmt.Println("Coords found:", latStr, lngStr)
+
 				lat, err1 := strconv.ParseFloat(latStr, 64)
 				lng, err2 := strconv.ParseFloat(lngStr, 64)
-				if err1 == nil && err2 == nil {
-					return lat, lng, nil
+				fmt.Println("Parsed coords:", lat, lng, err1, err2)
+				if err1 != nil || err2 != nil {
+					return 0, 0, fmt.Errorf("failed to parse coordinates: %v, %v", err1, err2)
 				}
-			}
-		}
-	}
 
-	// 2️⃣ Variant: input.card-share-view__link-input dan olish
-	inputElem, err := wd.FindElement(selenium.ByCSSSelector, "input.card-share-view__link-input")
-	if err == nil {
-		val, _ := inputElem.GetAttribute("value")
-		fmt.Println("Share link found:", val)
-		if strings.Contains(val, "ll=") {
-			parts := strings.Split(val, "ll=")
-			if len(parts) > 1 {
-				coordsPart := strings.Split(parts[1], "&")[0]
-				xy := strings.Split(coordsPart, "%2C")
-				if len(xy) == 2 {
-					lng, err1 := strconv.ParseFloat(xy[0], 64)
-					lat, err2 := strconv.ParseFloat(xy[1], 64)
-					if err1 == nil && err2 == nil {
-						return lat, lng, nil
-					}
-				}
+				return lat, lng, nil
 			}
 		}
 	}
