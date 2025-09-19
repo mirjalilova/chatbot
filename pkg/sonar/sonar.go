@@ -62,12 +62,12 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 					"items": map[string]any{
 						"type": "object",
 						"properties": map[string]any{
-							"name":        map[string]string{"type": "string"},
-							"address":     map[string]string{"type": "string"},
+							"name":    map[string]string{"type": "string"},
+							"address": map[string]string{"type": "string"},
 							"location": map[string]any{
 								"type": "object",
 								"properties": map[string]any{
-									"latitude": map[string]string{"type": "number"},
+									"latitude":  map[string]string{"type": "number"},
 									"longitude": map[string]string{"type": "number"},
 								},
 								"required": []string{"latitude", "longitude"},
@@ -154,6 +154,13 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 
 	err = conn.WriteJSON(map[string]any{
 		"reponce": res,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = conn.WriteJSON(map[string]any{
+		"status": "end",
 	})
 	if err != nil {
 		return err

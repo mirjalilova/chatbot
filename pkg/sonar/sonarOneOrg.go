@@ -245,6 +245,13 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 		},
 	})
 
+	err = conn.WriteJSON(map[string]any{
+		"status": "end",
+	})
+	if err != nil {
+		return err
+	}
+
 	go SaveResponce(db, userQuestion, chatRoomId, fullText, geminiQuestion, citations)
 
 	return nil
@@ -297,6 +304,13 @@ func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, 
 			"citations": citations,
 		},
 	})
+
+	err = conn.WriteJSON(map[string]any{
+		"status": "end",
+	})
+	if err != nil {
+		return err
+	}
 
 	go SaveResponce(db, userQuestion, chatRoomId, text, geminiQuestion, citations)
 
