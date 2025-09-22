@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"context"
 	"chatbot/internal/entity"
+	"context"
 	"log/slog"
 
 	"github.com/gin-gonic/gin"
@@ -48,6 +48,8 @@ func (h *Handler) CreateChatRoom(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id query string true "User ID"
+// @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
 // @Success 200 {object} entity.ChatRoomList
 // @Failure 400 {object} string
 // @Failure 500 {object} string
@@ -55,7 +57,22 @@ func (h *Handler) CreateChatRoom(c *gin.Context) {
 // @Router /chat/user_id [get]
 func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
 
-	res, err := h.UseCase.ChatRepo.GetChatRoomByUserId(context.Background(), &entity.ById{Id: c.Query("id")})
+	offset := c.Query("offset")
+	limit := c.Query("limit")
+
+	limitValue, offsetValue, err := parsePaginationParams(c, limit, offset)
+	if err != nil {
+		c.JSON(400, gin.H{"Error parsing pagination parameters:": err.Error()})
+		slog.Error("Error parsing pagination parameters: ", "err", err)
+		return
+	}
+
+	req := &entity.GetChatRoomReq{
+		UserId: c.Query("id"),
+		Limit:  limitValue,
+		Offset: offsetValue,
+	}
+	res, err := h.UseCase.ChatRepo.GetChatRoomByUserId(context.Background(), req)
 	if err != nil {
 		c.JSON(500, gin.H{"Error getting Chat rooms by user ID: ": err.Error()})
 		slog.Error("Error getting Chat rooms by user ID: ", "err", err)

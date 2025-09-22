@@ -80,6 +80,10 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 								"type":  "array",
 								"items": map[string]string{"type": "string"},
 							},
+							"images_url": map[string]any{
+								"type":  "array",
+								"items": map[string]string{"type": "string"},
+							},
 						},
 						"required": []string{"name", "address"},
 					},
@@ -153,7 +157,7 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 	}
 
 	err = conn.WriteJSON(map[string]any{
-		"reponce": res,
+		"response": res,
 	})
 	if err != nil {
 		return err

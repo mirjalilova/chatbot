@@ -47,13 +47,23 @@ func (r *ChatRepo) Create(ctx context.Context, req *entity.ChatCreate) error {
 	return nil
 }
 
-func (r *ChatRepo) GetChatRoomByUserId(ctx context.Context, id *entity.ById) (*entity.ChatRoomList, error) {
+func (r *ChatRepo) GetChatRoomByUserId(ctx context.Context, req *entity.GetChatRoomReq) (*entity.ChatRoomList, error) {
 	query := `
 		SELECT COUNT(id) OVER () AS total_count, id, title, created_at
 		FROM chat_rooms
-		WHERE user_id = $1 AND deleted_at = 0 ORDER BY created_at DESC`
+		WHERE user_id = $1 AND deleted_at = 0`
 
-	rows, err := r.pg.Pool.Query(ctx, query, id.Id)
+	var args []interface{}
+	args = append(args, req.UserId)
+
+	if req.Limit != 0 {
+		query += " ORDER BY created_at DESC LIMIT $2 OFFSET $3"
+		args = append(args, req.Limit, req.Offset)
+	} else {
+		query += " ORDER BY created_at DESC"
+	}
+
+	rows, err := r.pg.Pool.Query(ctx, query, args...)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("chat rooms list is empty")
@@ -73,10 +83,8 @@ func (r *ChatRepo) GetChatRoomByUserId(ctx context.Context, id *entity.ById) (*e
 		}
 
 		r.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
-
 		result.ChatRooms = append(result.ChatRooms, r)
 		result.Count = count
-
 	}
 
 	return &result, nil

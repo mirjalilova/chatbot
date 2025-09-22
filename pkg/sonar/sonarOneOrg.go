@@ -237,11 +237,14 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 		finalLocations = nil
 	}
 
+	images := extractImageURLs(citations)
+
 	_ = conn.WriteJSON(map[string]any{
 		"data": map[string]any{
-			"text":      fullText,
-			"citations": citations,
-			"location":  finalLocations,
+			"text":       fullText,
+			"citations":  citations,
+			"location":   finalLocations,
+			"images_url": images,
 		},
 	})
 
@@ -328,4 +331,19 @@ func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_r
 	})
 
 	fmt.Println("Saving chat log:", request, responce)
+}
+
+func extractImageURLs(urls []string) []string {
+	var imgs []string
+	for _, u := range urls {
+		lower := strings.ToLower(u)
+		if strings.HasSuffix(lower, ".jpg") ||
+			strings.HasSuffix(lower, ".jpeg") ||
+			strings.HasSuffix(lower, ".png") ||
+			strings.HasSuffix(lower, ".gif") ||
+			strings.HasSuffix(lower, ".webp") {
+			imgs = append(imgs, u)
+		}
+	}
+	return imgs
 }

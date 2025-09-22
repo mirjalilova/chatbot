@@ -61,6 +61,7 @@ type OrgInfo struct {
 	Description string   `json:"description,omitempty"`
 	Website     string   `json:"website,omitempty"`
 	Sources     []string `json:"sources,omitempty"`
+	ImagesURL   []string `json:"images_url,omitempty"`
 }
 
 type Response struct {
@@ -74,4 +75,10 @@ type Request struct {
 
 type AskRequest struct {
 	Message string `json:"message" binding:"required"`
+}
+
+type GetChatRoomReq struct {
+	UserId string `json:"user_id" binding:"required"`
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
 }
