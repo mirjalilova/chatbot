@@ -3,15 +3,14 @@ definitions:
   entity.Chat:
     properties:
       chat_room_id:
-        description: UserID     string `json:"user_id"`
         type: string
+      content:
+        $ref: '#/definitions/entity.Content'
       created_at:
         type: string
       id:
         type: string
-      request:
-        type: string
-      response:
+      role:
         type: string
     type: object
   entity.ChatList:
@@ -45,6 +44,24 @@ definitions:
         type: array
       count:
         type: integer
+    type: object
+  entity.Content:
+    properties:
+      citations:
+        items:
+          type: string
+        type: array
+      images_url:
+        items:
+          type: string
+        type: array
+      location:
+        items:
+          type: string
+        type: array
+      organizations: {}
+      text:
+        type: string
     type: object
   entity.CreateUser:
     properties:

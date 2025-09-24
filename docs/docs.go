@@ -701,8 +701,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "chat_room_id": {
-                    "description": "UserID     string ` + "`" + `json:\"user_id\"` + "`" + `",
                     "type": "string"
+                },
+                "content": {
+                    "$ref": "#/definitions/entity.Content"
                 },
                 "created_at": {
                     "type": "string"
@@ -710,10 +712,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "request": {
-                    "type": "string"
-                },
-                "response": {
+                "role": {
                     "type": "string"
                 }
             }
@@ -765,6 +764,33 @@ const docTemplate = `{
                 },
                 "count": {
                     "type": "integer"
+                }
+            }
+        },
+        "entity.Content": {
+            "type": "object",
+            "properties": {
+                "citations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "images_url": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "location": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "organizations": {},
+                "text": {
+                    "type": "string"
                 }
             }
         },

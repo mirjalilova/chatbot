@@ -25,12 +25,19 @@ type ChatRoomList struct {
 }
 
 type Chat struct {
-	ID string `json:"id"`
-	// UserID     string `json:"user_id"`
-	ChatRoomID string `json:"chat_room_id"`
-	Request    string `json:"request"`
-	Response   string `json:"response"`
-	CreatedAt  string `json:"created_at"`
+	ID         string  `json:"id"`
+	ChatRoomID string  `json:"chat_room_id"`
+	Role       string  `json:"role"`
+	Content    Content `json:"content"`
+	CreatedAt  string  `json:"created_at"`
+}
+
+type Content struct {
+	Text          string   `json:"text,omitempty"`
+	Citations     []string `json:"citations,omitempty"`
+	Location      []string `json:"location,omitempty"`
+	ImagesURL     []string `json:"images_url,omitempty"`
+	Organizations any      `json:"organizations,omitempty"`
 }
 
 type ChatList struct {

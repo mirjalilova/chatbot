@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS chat (
     gemini_request TEXT NOT NULL,
     responce TEXT NOT NULL,
     citation_urls TEXT[] DEFAULT '{}',
+    location TEXT[] DEFAULT '{}',
+    images_url TEXT[] DEFAULT '{}',
+    organizations jsonb DEFAULT '[]'::jsonb,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     deleted_at BIGINT NOT NULL DEFAULT 0

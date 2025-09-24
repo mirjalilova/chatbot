@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -92,9 +93,9 @@ func (r *ChatRepo) GetChatRoomByUserId(ctx context.Context, req *entity.GetChatR
 
 func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entity.ChatList, error) {
 	query := `
-		SELECT id, chat_room_id, user_request, responce, created_at
+		SELECT id, chat_room_id, user_request, responce, citation_urls, location, images_url, organizations, created_at
 		FROM chat
-		WHERE chat_room_id = $1
+		WHERE chat_room_id = $1 AND deleted_at = 0
 		ORDER BY created_at ASC`
 
 	rows, err := r.pg.Pool.Query(ctx, query, id.Id)
@@ -108,16 +109,50 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 
 	var result entity.ChatList
 	for rows.Next() {
-		var r entity.Chat
-		var createdAt time.Time
-		err := rows.Scan(&r.ID, &r.ChatRoomID, &r.Request, &r.Response, &createdAt)
+		var (
+			id         string
+			chatRoomID string
+			userReq    string
+			response   string
+			citations  []string
+			locations  []string
+			images     []string
+			orgs       []byte
+			createdAt  time.Time
+		)
+
+		err := rows.Scan(&id, &chatRoomID, &userReq, &response, &citations, &locations, &images, &orgs, &createdAt)
 		if err != nil {
 			return nil, err
 		}
 
-		r.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
+		createdStr := createdAt.Format("2006-01-02 15:04:05")
 
-		result.Chats = append(result.Chats, r)
+		// USER message
+		result.Chats = append(result.Chats, entity.Chat{
+			ID:         id,
+			ChatRoomID: chatRoomID,
+			Role:       "user",
+			Content: entity.Content{
+				Text: userReq,
+			},
+			CreatedAt: createdStr,
+		})
+
+		// ASSISTANT message
+		result.Chats = append(result.Chats, entity.Chat{
+			ID:         id,
+			ChatRoomID: chatRoomID,
+			Role:       "assistant",
+			Content: entity.Content{
+				Text:          response,
+				Citations:     citations,
+				Location:      locations,
+				ImagesURL:     images,
+				Organizations: json.RawMessage(orgs),
+			},
+			CreatedAt: createdStr,
+		})
 	}
 
 	return &result, nil
