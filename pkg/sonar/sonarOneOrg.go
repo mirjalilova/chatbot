@@ -326,13 +326,19 @@ func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, 
 
 func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_request string, citation_urls []string, locations []map[string]float64, images_url []string, orgs any) {
 
+	var locStrings []string
+	for _, loc := range locations {
+		b, _ := json.Marshal(loc)
+		locStrings = append(locStrings, string(b))
+	}
+
 	err := db.ChatRepo.Create(context.Background(), &entity.ChatCreate{
 		ChatRoomID:    chat_room_id,
 		UserRequest:   request,
 		GeminiRequest: gemini_request,
 		Responce:      responce,
 		CitationURLs:  citation_urls,
-		Location:      locations,
+		Location:      locStrings,
 		ImagesURL:     images_url,
 		Organizations: orgs,
 	})
