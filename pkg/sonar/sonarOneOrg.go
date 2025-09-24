@@ -326,7 +326,7 @@ func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, 
 
 func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_request string, citation_urls []string, locations []map[string]float64, images_url []string, orgs any) {
 
-	db.ChatRepo.Create(context.Background(), &entity.ChatCreate{
+	err := db.ChatRepo.Create(context.Background(), &entity.ChatCreate{
 		ChatRoomID:    chat_room_id,
 		UserRequest:   request,
 		GeminiRequest: gemini_request,
@@ -337,6 +337,9 @@ func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_r
 		Organizations: orgs,
 	})
 
+	if err != nil {
+		fmt.Println("Error saving chat log:", err)
+	}
 	fmt.Println("Saving chat log:", request, responce)
 }
 
