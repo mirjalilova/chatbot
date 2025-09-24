@@ -57,48 +57,80 @@ INSERT INTO users (id, full_name, phone_number, password) VALUES
 ('00000000-0000-0000-0000-000000000000', 'admin', '+998979004416', '$2a$10$hQIviMhEdjuyAAKYsImr6uw9739a96iQNfJhox/lx/7foJzsKR9JW'); -- password is 'adminpassword'
 
 
+-- CREATE OR REPLACE FUNCTION update_all_chat_room_titles()
+-- RETURNS TRIGGER AS $$
+-- DECLARE
+--     r RECORD;
+--     new_title TEXT;
+-- BEGIN
+--     FOR r IN SELECT id FROM chat_rooms WHERE deleted_at = 0
+--     LOOP
+--         SELECT
+--             string_agg(word, ' ') INTO new_title
+--         FROM (
+--             SELECT unnest(string_to_array(responce, ' ')) AS word
+--             FROM chat
+--             WHERE chat_room_id = r.id AND responce IS NOT NULL AND deleted_at = 0
+--             ORDER BY created_at ASC
+--             LIMIT 3
+--         ) AS words;
+
+--         IF new_title IS NULL THEN
+--             new_title := 'New Chat';
+--         END IF;
+
+--         UPDATE chat_rooms
+--         SET title = new_title,
+--             updated_at = NOW()
+--         WHERE id = r.id;
+--     END LOOP;
+
+--     RETURN NULL;
+-- END;
+-- $$ LANGUAGE plpgsql;
+
+
+
+-- DROP TRIGGER IF EXISTS trg_update_all_chat_titles ON chat;
+
+-- CREATE TRIGGER trg_update_all_chat_titles
+-- AFTER INSERT ON chat
+-- FOR EACH ROW
+-- EXECUTE FUNCTION update_all_chat_room_titles();
+
+
 CREATE OR REPLACE FUNCTION update_all_chat_room_titles()
 RETURNS TRIGGER AS $$
 DECLARE
-    r RECORD;
     new_title TEXT;
 BEGIN
-    FOR r IN SELECT id FROM chat_rooms WHERE deleted_at = 0
-    LOOP
-        SELECT
-            string_agg(word, ' ') INTO new_title
-        FROM (
-            SELECT unnest(string_to_array(responce, ' ')) AS word
-            FROM chat
-            WHERE chat_room_id = r.id AND responce IS NOT NULL AND deleted_at = 0
-            ORDER BY created_at ASC
-            LIMIT 3
-        ) AS words;
+    SELECT string_agg(word, ' ')
+    INTO new_title
+    FROM (
+        SELECT unnest(string_to_array(c.user_request, ' ')) AS word
+        FROM chat c
+        WHERE c.chat_room_id = NEW.chat_room_id AND c.deleted_at = 0
+        ORDER BY c.created_at ASC
+        LIMIT 3
+    ) AS words;
 
-        IF new_title IS NULL THEN
-            new_title := 'New Chat';
-        END IF;
+    IF new_title IS NULL OR length(trim(new_title)) = 0 THEN
+        new_title := 'New Chat';
+    END IF;
 
-        UPDATE chat_rooms
-        SET title = new_title,
-            updated_at = NOW()
-        WHERE id = r.id;
-    END LOOP;
+    UPDATE chat_rooms
+    SET title = new_title,
+        updated_at = NOW()
+    WHERE id = NEW.chat_room_id;
 
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
-
-
-DROP TRIGGER IF EXISTS trg_update_all_chat_titles ON chat;
-
 CREATE TRIGGER trg_update_all_chat_titles
 AFTER INSERT ON chat
 FOR EACH ROW
 EXECUTE FUNCTION update_all_chat_room_titles();
-
-
 
 
 

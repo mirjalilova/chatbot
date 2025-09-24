@@ -107,7 +107,7 @@ func (h *Handler) SaveResponce(request, chat_room_id, responce, gemini_request s
 		GeminiRequest: gemini_request,
 		Responce:      responce,
 		CitationURLs:  []string{},
-		Location:      []map[string]float64{},
+		Location:      []string{},
 		ImagesURL:     []string{},
 		Organizations: []entity.OrgInfo{},
 	})
