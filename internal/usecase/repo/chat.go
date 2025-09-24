@@ -37,10 +37,24 @@ func (r *ChatRepo) CreateChatRoom(ctx context.Context, req *entity.ChatRoomCreat
 }
 
 func (r *ChatRepo) Create(ctx context.Context, req *entity.ChatCreate) error {
+	query := `
+		INSERT INTO chat (
+			chat_room_id, user_request, gemini_request, responce, citation_urls, location, images_url, organizations
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id;
+	`
 
-	query := `INSERT INTO chat (chat_room_id, user_request, gemini_request, responce,citation_urls) VALUES ($1, $2, $3, $4,$5)`
-
-	_, err := r.pg.Pool.Exec(ctx, query, req.ChatRoomID, req.UserRequest, req.GeminiRequest, req.Responce, req.CitationURLs)
+	var id string
+	err := r.pg.Pool.QueryRow(ctx, query,
+		req.ChatRoomID,
+		req.UserRequest,
+		req.GeminiRequest,
+		req.Responce,
+		req.CitationURLs,
+		req.Location,
+		req.ImagesURL,
+		req.Organizations,
+	).Scan(&id)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,9 @@ type ChatCreate struct {
 	UserRequest   string   `json:"user_request"`
 	GeminiRequest string   `json:"gemini_request"`
 	Responce      string   `json:"responce" binding:"required"`
+	Location      []map[string]float64 `json:"location" binding:"required"`
+	ImagesURL     []string `json:"images_url" binding:"required"`
+	Organizations any      `json:"organizations" binding:"required"`
 	CitationURLs  []string `json:"citation_urls" binding:"required"`
 }
 

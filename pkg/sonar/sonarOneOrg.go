@@ -256,7 +256,7 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 		return err
 	}
 
-	go SaveResponce(db, userQuestion, chatRoomId, fullText, geminiQuestion, citations)
+	go SaveResponce(db, userQuestion, chatRoomId, fullText, geminiQuestion, citations, finalLocations, images, nil)
 
 	return nil
 }
@@ -304,8 +304,11 @@ func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, 
 
 	_ = conn.WriteJSON(map[string]any{
 		"data": map[string]any{
-			"text":      text,
-			"citations": citations,
+			"text":          text,
+			"citations":     citations,
+			"location":      nil,
+			"images_url":    nil,
+			"organizations": nil,
 		},
 	})
 
@@ -316,12 +319,12 @@ func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, 
 		return err
 	}
 
-	go SaveResponce(db, userQuestion, chatRoomId, text, geminiQuestion, citations)
+	go SaveResponce(db, userQuestion, chatRoomId, text, geminiQuestion, citations, nil, nil, nil)
 
 	return nil
 }
 
-func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_request string, citation_urls []string) {
+func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_request string, citation_urls []string, locations []map[string]float64, images_url []string, orgs any) {
 
 	db.ChatRepo.Create(context.Background(), &entity.ChatCreate{
 		ChatRoomID:    chat_room_id,
@@ -329,6 +332,9 @@ func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_r
 		GeminiRequest: gemini_request,
 		Responce:      responce,
 		CitationURLs:  citation_urls,
+		Location:      locations,
+		ImagesURL:     images_url,
+		Organizations: orgs,
 	})
 
 	fmt.Println("Saving chat log:", request, responce)

@@ -106,6 +106,10 @@ func (h *Handler) SaveResponce(request, chat_room_id, responce, gemini_request s
 		UserRequest:   request,
 		GeminiRequest: gemini_request,
 		Responce:      responce,
+		CitationURLs:  []string{},
+		Location:      []map[string]float64{},
+		ImagesURL:     []string{},
+		Organizations: []entity.OrgInfo{},
 	})
 
 	fmt.Println("Saving chat log:", request, responce)

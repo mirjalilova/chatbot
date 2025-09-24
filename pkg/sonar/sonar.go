@@ -181,7 +181,7 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 		return err
 	}
 
-	go SaveResponce(db, userQuestion, chatRoomId, string(resBytes), geminiQuestion, citations)
+	go SaveResponce(db, userQuestion, chatRoomId, string(resBytes), geminiQuestion, citations, nil, nil, orgs)
 
 	return nil
 }
