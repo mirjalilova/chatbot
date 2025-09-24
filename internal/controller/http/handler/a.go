@@ -43,10 +43,9 @@ func (h *Handler) ChatWS(c *gin.Context) {
 		}
 		request := req.Message
 
-		
 		oldQueries, err := cache.GetUserQueries(h.Redis, ctx, "12345678", int64(5))
 		fmt.Println("Old queries:", oldQueries)
-		
+
 		geminiResp := gemini.GetResponse(*h.Config, request, oldQueries)
 
 		go func() {
@@ -57,10 +56,23 @@ func (h *Handler) ChatWS(c *gin.Context) {
 
 		if geminiResp.Route == "gemini" {
 			err = conn.WriteJSON(map[string]any{
-				"response": geminiResp.Explanation,
+				"data": map[string]any{
+					"text":          geminiResp.Explanation,
+					"citations":     nil,
+					"location":      nil,
+					"images_url":    nil,
+					"organizations": nil,
+				},
 			})
 			if err != nil {
 				fmt.Println("write error:", err)
+				break
+			}
+			err = conn.WriteJSON(map[string]any{
+				"status": "end",
+			})
+			if err != nil {
+				slog.Warn("Failed to send end status", "error", err)
 				break
 			}
 			go h.SaveResponce(request, chatRoomID, geminiResp.Explanation, "")

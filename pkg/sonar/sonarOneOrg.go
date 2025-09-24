@@ -241,10 +241,11 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 
 	_ = conn.WriteJSON(map[string]any{
 		"data": map[string]any{
-			"text":       fullText,
-			"citations":  citations,
-			"location":   finalLocations,
-			"images_url": images,
+			"text":          fullText,
+			"citations":     citations,
+			"location":      finalLocations,
+			"images_url":    images,
+			"organizations": nil,
 		},
 	})
 
