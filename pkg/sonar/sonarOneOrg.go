@@ -196,8 +196,8 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 						lat := coords[0]
 						lng := coords[1]
 						locations = append(locations, map[string]float64{
-							"lat": parseFloat(lat),
-							"lng": parseFloat(lng),
+							"latitude": parseFloat(lat),
+							"longitude": parseFloat(lng),
 						})
 					}
 				}
@@ -210,8 +210,8 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 					lat := coords[0]
 					lng := coords[1]
 					locations = append(locations, map[string]float64{
-						"lat": parseFloat(lat),
-						"lng": parseFloat(lng),
+						"latitude": parseFloat(lat),
+						"longitude": parseFloat(lng),
 					})
 				}
 			}
@@ -223,8 +223,8 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 			if err == nil {
 				fmt.Println("Got coords from Yandex:", lat, lng)
 				locations = append(locations, map[string]float64{
-					"lat": lat,
-					"lng": lng,
+					"latitude": lat,
+					"longitude": lng,
 				})
 			}
 		}
