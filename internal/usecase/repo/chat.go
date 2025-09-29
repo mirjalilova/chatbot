@@ -11,6 +11,8 @@ import (
 	"chatbot/config"
 	"chatbot/internal/entity"
 	"chatbot/pkg/postgres"
+
+	"github.com/lib/pq"
 )
 
 type ChatRepo struct {
@@ -129,7 +131,7 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 			userReq    string
 			response   string
 			citations  []string
-			locRaw     []byte
+			locRaw     pq.StringArray
 			images     []string
 			orgs       []byte
 			createdAt  time.Time
@@ -142,18 +144,14 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 
 		createdStr := createdAt.Format("2006-01-02 15:04:05")
 
-		var locStrings []string
-		if err := json.Unmarshal(locRaw, &locStrings); err != nil {
-			return nil, err
-		}
-
 		var locParsed []map[string]float64
-		for _, l := range locStrings {
+		for _, l := range locRaw {
 			var obj map[string]float64
 			if err := json.Unmarshal([]byte(l), &obj); err == nil {
 				locParsed = append(locParsed, obj)
 			}
 		}
+
 		// USER message
 		result.Chats = append(result.Chats, entity.ChatResponce{
 			ID:         id,
