@@ -129,7 +129,7 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 			userReq    string
 			response   string
 			citations  []string
-			locations  json.RawMessage
+			locations  []byte
 			images     []string
 			orgs       []byte
 			createdAt  time.Time
