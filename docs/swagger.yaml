@@ -1,24 +1,24 @@
 basePath: /
 definitions:
-  entity.Chat:
+  entity.ChatList:
+    properties:
+      chats:
+        items:
+          $ref: '#/definitions/entity.ChatResponce'
+        type: array
+    type: object
+  entity.ChatResponce:
     properties:
       chat_room_id:
         type: string
       content:
-        $ref: '#/definitions/entity.Content'
+        $ref: '#/definitions/entity.ContentRes'
       created_at:
         type: string
       id:
         type: string
       role:
         type: string
-    type: object
-  entity.ChatList:
-    properties:
-      chats:
-        items:
-          $ref: '#/definitions/entity.Chat'
-        type: array
     type: object
   entity.ChatRoom:
     properties:
@@ -45,7 +45,7 @@ definitions:
       count:
         type: integer
     type: object
-  entity.Content:
+  entity.ContentRes:
     properties:
       citations:
         items:
@@ -57,7 +57,9 @@ definitions:
         type: array
       location:
         items:
-          type: string
+          additionalProperties:
+            type: number
+          type: object
         type: array
       organizations: {}
       text:

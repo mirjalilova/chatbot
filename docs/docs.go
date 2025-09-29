@@ -697,14 +697,25 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "entity.Chat": {
+        "entity.ChatList": {
+            "type": "object",
+            "properties": {
+                "chats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.ChatResponce"
+                    }
+                }
+            }
+        },
+        "entity.ChatResponce": {
             "type": "object",
             "properties": {
                 "chat_room_id": {
                     "type": "string"
                 },
                 "content": {
-                    "$ref": "#/definitions/entity.Content"
+                    "$ref": "#/definitions/entity.ContentRes"
                 },
                 "created_at": {
                     "type": "string"
@@ -714,17 +725,6 @@ const docTemplate = `{
                 },
                 "role": {
                     "type": "string"
-                }
-            }
-        },
-        "entity.ChatList": {
-            "type": "object",
-            "properties": {
-                "chats": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Chat"
-                    }
                 }
             }
         },
@@ -767,7 +767,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.Content": {
+        "entity.ContentRes": {
             "type": "object",
             "properties": {
                 "citations": {
@@ -785,7 +785,10 @@ const docTemplate = `{
                 "location": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number"
+                        }
                     }
                 },
                 "organizations": {},

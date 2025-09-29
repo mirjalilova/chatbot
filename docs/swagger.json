@@ -690,14 +690,25 @@
         }
     },
     "definitions": {
-        "entity.Chat": {
+        "entity.ChatList": {
+            "type": "object",
+            "properties": {
+                "chats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.ChatResponce"
+                    }
+                }
+            }
+        },
+        "entity.ChatResponce": {
             "type": "object",
             "properties": {
                 "chat_room_id": {
                     "type": "string"
                 },
                 "content": {
-                    "$ref": "#/definitions/entity.Content"
+                    "$ref": "#/definitions/entity.ContentRes"
                 },
                 "created_at": {
                     "type": "string"
@@ -707,17 +718,6 @@
                 },
                 "role": {
                     "type": "string"
-                }
-            }
-        },
-        "entity.ChatList": {
-            "type": "object",
-            "properties": {
-                "chats": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Chat"
-                    }
                 }
             }
         },
@@ -760,7 +760,7 @@
                 }
             }
         },
-        "entity.Content": {
+        "entity.ContentRes": {
             "type": "object",
             "properties": {
                 "citations": {
@@ -778,7 +778,10 @@
                 "location": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number"
+                        }
                     }
                 },
                 "organizations": {},
