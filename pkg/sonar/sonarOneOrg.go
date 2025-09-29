@@ -48,8 +48,8 @@ type ppStreamChunk struct {
 		Type    string `json:"type"`
 	} `json:"error,omitempty"`
 	Location *struct {
-		Lat float64 `json:"lat"`
-		Lng float64 `json:"lng"`
+		Lat float64 `json:"latitude"`
+		Lng float64 `json:"longitude"`
 	} `json:"location,omitempty"`
 }
 
