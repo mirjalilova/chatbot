@@ -56,7 +56,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 
 		if geminiResp.Route == "gemini" {
 			err = conn.WriteJSON(map[string]any{
-				"data": map[string]any{
+				"content": map[string]any{
 					"text":          geminiResp.Explanation,
 					"citations":     nil,
 					"location":      nil,
