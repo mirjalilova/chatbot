@@ -240,7 +240,7 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 	images := extractImageURLs(citations)
 
 	_ = conn.WriteJSON(map[string]any{
-		"data": map[string]any{
+		"content": map[string]any{
 			"text":          fullText,
 			"citations":     citations,
 			"location":      finalLocations,
@@ -303,7 +303,7 @@ func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, 
 	}
 
 	_ = conn.WriteJSON(map[string]any{
-		"data": map[string]any{
+		"content": map[string]any{
 			"text":          text,
 			"citations":     citations,
 			"location":      nil,

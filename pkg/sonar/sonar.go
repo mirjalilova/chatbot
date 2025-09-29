@@ -157,7 +157,7 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 	}
 
 	err = conn.WriteJSON(map[string]any{
-		"data": map[string]any{
+		"content": map[string]any{
 			"text":          "",
 			"citations":     nil,
 			"location":      nil,
