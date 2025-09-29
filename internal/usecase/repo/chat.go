@@ -129,7 +129,7 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 			userReq    string
 			response   string
 			citations  []string
-			locations  []string
+			locations  json.RawMessage
 			images     []string
 			orgs       []byte
 			createdAt  time.Time
@@ -142,26 +142,32 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 
 		createdStr := createdAt.Format("2006-01-02 15:04:05")
 
+		var locParsed []map[string]float64
+		if len(locations) > 0 {
+			if err := json.Unmarshal(locations, &locParsed); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal locations: %w", err)
+			}
+		}
 		// USER message
-		result.Chats = append(result.Chats, entity.Chat{
+		result.Chats = append(result.Chats, entity.ChatResponce{
 			ID:         id,
 			ChatRoomID: chatRoomID,
 			Role:       "user",
-			Content: entity.Content{
+			Content: entity.ContentRes{
 				Text: userReq,
 			},
 			CreatedAt: createdStr,
 		})
 
 		// ASSISTANT message
-		result.Chats = append(result.Chats, entity.Chat{
+		result.Chats = append(result.Chats, entity.ChatResponce{
 			ID:         id,
 			ChatRoomID: chatRoomID,
 			Role:       "assistant",
-			Content: entity.Content{
+			Content: entity.ContentRes{
 				Text:          response,
 				Citations:     citations,
-				Location:      locations,
+				Location:      locParsed,
 				ImagesURL:     images,
 				Organizations: json.RawMessage(orgs),
 			},

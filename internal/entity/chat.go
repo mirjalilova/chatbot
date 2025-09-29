@@ -35,6 +35,22 @@ type Chat struct {
 	CreatedAt  string  `json:"created_at"`
 }
 
+type ChatResponce struct {
+	ID         string     `json:"id"`
+	ChatRoomID string     `json:"chat_room_id"`
+	Role       string     `json:"role"`
+	Content    ContentRes `json:"content"`
+	CreatedAt  string     `json:"created_at"`
+}
+
+type ContentRes struct {
+	Text          string               `json:"text,omitempty"`
+	Citations     []string             `json:"citations,omitempty"`
+	Location      []map[string]float64 `json:"location,omitempty"`
+	ImagesURL     []string             `json:"images_url,omitempty"`
+	Organizations any                  `json:"organizations,omitempty"`
+}
+
 type Content struct {
 	Text          string   `json:"text,omitempty"`
 	Citations     []string `json:"citations,omitempty"`
@@ -44,7 +60,7 @@ type Content struct {
 }
 
 type ChatList struct {
-	Chats []Chat `json:"chats"`
+	Chats []ChatResponce `json:"chats"`
 }
 
 type AskResponse struct {
