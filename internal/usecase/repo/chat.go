@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"chatbot/config"
@@ -129,7 +131,7 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 			userReq    string
 			response   string
 			citations  []string
-			locations  []byte
+			locations  []string
 			images     []string
 			orgs       []byte
 			createdAt  time.Time
@@ -143,9 +145,17 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 		createdStr := createdAt.Format("2006-01-02 15:04:05")
 
 		var locParsed []map[string]float64
-		if len(locations) > 0 {
-			if err := json.Unmarshal(locations, &locParsed); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal locations: %w", err)
+		for _, loc := range locations {
+			parts := strings.Split(loc, ",")
+			if len(parts) == 2 {
+				lat, err1 := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
+				lng, err2 := strconv.ParseFloat(strings.TrimSpace(parts[1]), 64)
+				if err1 == nil && err2 == nil {
+					locParsed = append(locParsed, map[string]float64{
+						"lat": lat,
+						"lng": lng,
+					})
+				}
 			}
 		}
 		// USER message
