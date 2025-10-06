@@ -6,16 +6,20 @@ import (
 	"chatbot/config"
 	"chatbot/internal/entity"
 	"chatbot/internal/usecase"
+	"chatbot/pkg/cache"
 	"chatbot/pkg/coords"
+	"chatbot/pkg/gemini"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/gorilla/websocket"
+	"github.com/redis/go-redis/v9"
 )
 
 type ppStreamChunk struct {
@@ -84,8 +88,7 @@ type ppStreamChunk struct {
 //      }
 // `
 
-func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, userQuestion, geminiQuestion, chatRoomId string) error {
-	fmt.Println("Processing request for one organization (SSE stream)...")
+func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, redis redis.Client, conn *websocket.Conn, userQuestion, geminiQuestion, chatRoomId string) error {
 
 	payload := map[string]any{
 		"model": "sonar",
@@ -116,7 +119,7 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 
 	ct := resp.Header.Get("Content-Type")
 	if !strings.HasPrefix(strings.ToLower(ct), "text/event-stream") {
-		return handleNonStream(db, conn, resp.Body, userQuestion, geminiQuestion, chatRoomId)
+		return handleNonStream(db, cfg, redis, conn, resp.Body, userQuestion, geminiQuestion, chatRoomId)
 	}
 
 	scanner := bufio.NewScanner(resp.Body)
@@ -145,7 +148,7 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 
 		var chunk ppStreamChunk
 		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
-			fmt.Println("WARN: failed to unmarshal SSE chunk:", err)
+			slog.Warn("failed to unmarshal SSE chunk", "error", err)
 			continue
 		}
 		if chunk.Error != nil {
@@ -196,7 +199,7 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 						lat := coords[0]
 						lng := coords[1]
 						locations = append(locations, map[string]float64{
-							"latitude": parseFloat(lat),
+							"latitude":  parseFloat(lat),
 							"longitude": parseFloat(lng),
 						})
 					}
@@ -210,20 +213,17 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 					lat := coords[0]
 					lng := coords[1]
 					locations = append(locations, map[string]float64{
-						"latitude": parseFloat(lat),
+						"latitude":  parseFloat(lat),
 						"longitude": parseFloat(lng),
 					})
 				}
 			}
 		} else if strings.Contains(v, "https://yandex.uz/maps/org") || strings.Contains(v, "https://yandex.com/maps/org") {
 
-			fmt.Println(v)
 			lat, lng, err := coords.ExtractCoordinates(v)
-			fmt.Println("Yandex coords:", lat, lng, "Error:", err)
 			if err == nil {
-				fmt.Println("Got coords from Yandex:", lat, lng)
 				locations = append(locations, map[string]float64{
-					"latitude": lat,
+					"latitude":  lat,
 					"longitude": lng,
 				})
 			}
@@ -257,6 +257,8 @@ func StreamToWSOneOrg(cfg config.Config, db *usecase.UseCase, conn *websocket.Co
 	}
 
 	go SaveResponce(db, userQuestion, chatRoomId, fullText, geminiQuestion, citations, finalLocations, images, nil)
+	organizationsJson, err := cache.GetChatOrganizations(&redis, context.Background(), "o"+chatRoomId, int64(5))
+	go gemini.OrganizationCreate(cfg, redis, fullText, organizationsJson, chatRoomId)
 
 	return nil
 }
@@ -267,7 +269,7 @@ func parseFloat(s string) float64 {
 	return f
 }
 
-func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, userQuestion, geminiQuestion, chatRoomId string) error {
+func handleNonStream(db *usecase.UseCase, cfg config.Config, redis redis.Client, conn *websocket.Conn, body io.Reader, userQuestion, geminiQuestion, chatRoomId string) error {
 	all, err := io.ReadAll(body)
 	if err != nil {
 		return err
@@ -320,6 +322,8 @@ func handleNonStream(db *usecase.UseCase, conn *websocket.Conn, body io.Reader, 
 	}
 
 	go SaveResponce(db, userQuestion, chatRoomId, text, geminiQuestion, citations, nil, nil, nil)
+	organizationsJson, err := cache.GetChatOrganizations(&redis, context.Background(), "o"+chatRoomId, int64(5))
+	go gemini.OrganizationCreate(cfg, redis, text, organizationsJson, chatRoomId)
 
 	return nil
 }
@@ -344,9 +348,8 @@ func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_r
 	})
 
 	if err != nil {
-		fmt.Println("Error saving chat log:", err)
+		slog.Error("Error saving chat log", "error", err)
 	}
-	fmt.Println("Saving chat log:", request, responce)
 }
 
 func extractImageURLs(urls []string) []string {

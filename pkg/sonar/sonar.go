@@ -149,8 +149,6 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 		return fmt.Errorf("failed to parse structured content: %v", err)
 	}
 
-	fmt.Println("\n\n\nSonar response:", orgs)
-
 	res := &entity.Response{
 		Citations: citations,
 		Data:      orgs,

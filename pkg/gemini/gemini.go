@@ -2,6 +2,7 @@ package gemini
 
 import (
 	"chatbot/config"
+	"chatbot/pkg/cache"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -19,12 +20,15 @@ type GeminiResponse struct {
 	ExpectsMultiple bool   `json:"expects_multiple,omitempty"`
 }
 
-func GetResponse(cfg config.Config, userQuestion string, oldQueries []string) *GeminiResponse {
-	geminiClient, err := genai.NewClient(context.Background(), option.WithAPIKey(cfg.ApiKey.Key))
+func GetResponse(cfg config.Config, userQuestion string, oldQueries []string, organizations []cache.Organization) *GeminiResponse {
+	ctx := context.Background()
+
+	client, err := genai.NewClient(ctx, option.WithAPIKey(cfg.ApiKey.Key))
 	if err != nil {
 		slog.Error("failed to create Gemini client", "error", err)
 		return nil
 	}
+	defer client.Close()
 
 	historyContext := ""
 	if len(oldQueries) > 0 {
@@ -36,38 +40,66 @@ func GetResponse(cfg config.Config, userQuestion string, oldQueries []string) *G
 		historyContext = strings.Join(lastFive, "\n- ")
 	}
 
-	model := geminiClient.GenerativeModel("models/gemini-2.5-pro")
+	model := client.GenerativeModel("models/gemini-2.5-pro")
 	advice := model.StartChat()
 
 	prompt := fmt.Sprintf(`
 You are an intelligent query analyzer working as a gateway before sending user questions to the Sonar model.
 
-Your responsibilities:
+Your task is to decide whether the user question should be handled by Gemini itself or sent to Sonar for organization-related data retrieval.
+
+---
+
+### 🔹 Responsibilities
 
 1. **Classification**
-   - If the user’s question is NOT related to organizations in Uzbekistan, respond with:
+	 If the user's question is about greetings or what you can do for them, Introduce yourself to him, that is, tell him in detail how you can answer questions about Uzbekistan organizations or share information about them with him:
      {
        "route": "gemini",
-       "explanation": "Polite and detailed explanation why the question is not about organizations in Uzbekistan."
+       "explanation": "your answer"
      }
-   - If the question IS about organizations in Uzbekistan (e.g., company size, ranking, address, contact info, industry), continue to step 2.
+   - If the user’s question is **not related to organizations in Uzbekistan**, Politely explain to the user that they are asking about Uzbek organizations and that you cannot answer questions in this area:
+     {
+       "route": "gemini",
+       "explanation": "your answer"
+     }
+   - If the question **is related** to organizations in Uzbekistan (such as company name, address, contact, ranking, size, or type), continue to step 2.
 
-2. **Enrichment**
-   - Rephrase, expand, and enrich the user’s question so it is clearer, more complete, and detailed for Sonar search.
-   - Consider not only the current user question, but also the conversation history below. 
-   - If the current question is vague or refers to "it", "they", or "also", infer the missing details from the history.
-   - Include useful context like: type of organization, location (Uzbekistan-specific), what metric matters (size, revenue, employees, reputation).
+---
+
+2. **Enrichment and Context Understanding**
+   - Rephrase and enrich the question to make it more complete for Sonar.
+   - You are provided with:
+     - Conversation history (the last 5 user queries).
+     - A list of known organizations, where the **0-index organization** is the most recently discussed or most relevant one.
+   - If the current question is short or refers to words like “it”, “they”, or uses implicit references such as “address?”, “phone number?”, “what about it?”, assume it refers to the **0-index organization** in the list.
+   - When enriching the question, include:
+     - The organization name from the 0-index if applicable.
+     - Relevant context such as organization type, location (Uzbekistan), and what information the user might be seeking (e.g., ranking, contacts, description).
+
+---
 
 3. **Multiplicity prediction**
-   - Predict if the query will likely return information about multiple organizations (array) or a single organization (one object).
-   - Return this as a boolean field "expects_multiple":
-     - true → if the query is about categories, rankings, comparisons, or lists of organizations.
-     - false → if the query is about one specific organization.
-   - Then respond with:
+   - Predict if the question expects information about multiple organizations or just one.
+   - Return this as "expects_multiple":
+     - true → if the question is about categories, lists, or comparisons (e.g., "the biggest universities in Uzbekistan").
+     - false → if the question is about a single specific organization.
+
+---
+
+4. **Return Format**
+   - Always return valid JSON only (no extra explanations, markdown, or text).
+   - Example for non-organization questions:
+     {
+       "route": "gemini",
+       "explanation": "This question is about weather, not organizations."
+     }
+
+   - Example for organization-related questions:
      {
        "route": "sonar",
-       "enriched_query": "<your rewritten and detailed query for Sonar>",
-       "expects_multiple": <true|false>
+       "enriched_query": "What is the address and contact number of Tashkent University of Information Technologies in Uzbekistan?",
+       "expects_multiple": false
      }
 
 **Rules:**
@@ -76,19 +108,23 @@ Your responsibilities:
 - If "route" is "gemini", include "explanation".
 - If "route" is "sonar", include "enriched_query" and "expects_multiple" (true/false).
 
-Conversation history (last 5 user questions):
+---
+
+🧠 **Conversation history (last 5 questions):**
 - %s
 
-Current user question:
+🏢 **Known organizations:**
 %s
 
-Reply only in Uzbek
+💬 **Current user question:**
+%s
 
-`, historyContext, userQuestion)
+Reply **only in valid JSON** and in **Uzbek language**.
+`, historyContext, organizations, userQuestion)
 
-	res, err := advice.SendMessage(context.Background(), genai.Text(prompt))
+	res, err := advice.SendMessage(ctx, genai.Text(prompt))
 	if err != nil {
-		slog.Error("failed to send message", "error", err)
+		slog.Error("failed to send message to Gemini", "error", err)
 		return nil
 	}
 
@@ -100,23 +136,21 @@ Reply only in Uzbek
 	}
 
 	raw := strings.TrimSpace(builder.String())
-
-	clean := strings.TrimSpace(raw)
-	clean = strings.TrimPrefix(clean, "```json")
-	clean = strings.TrimPrefix(clean, "```")
-	clean = strings.TrimSuffix(clean, "```")
+	clean := strings.Trim(raw, "` \n")
+	clean = strings.TrimPrefix(clean, "json")
+	clean = strings.TrimPrefix(clean, "JSON")
 
 	var parsed GeminiResponse
-	if err := json.Unmarshal([]byte(strings.TrimSpace(clean)), &parsed); err != nil {
+	if err := json.Unmarshal([]byte(clean), &parsed); err != nil {
 		slog.Error("failed to parse Gemini response as JSON", "error", err)
 		return nil
 	}
 
-	if parsed.Route == "gemini" {
-		fmt.Println("Return directly to user:", parsed.Explanation)
-	} else if parsed.Route == "sonar" {
-		fmt.Println("Forward to Sonar with enriched query:", parsed.EnrichedQuery)
-	}
+	// if parsed.Route == "gemini" {
+	// 	fmt.Println("Return directly to user:", parsed.Explanation)
+	// } else if parsed.Route == "sonar" {
+	// 	fmt.Println("Forward to Sonar with enriched query:", parsed.EnrichedQuery)
+	// }
 
 	return &parsed
 }

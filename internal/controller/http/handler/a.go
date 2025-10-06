@@ -25,7 +25,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		fmt.Println("WebSocket upgrade error:", err)
+		slog.Error("WebSocket upgrade error", "error", err)
 		return
 	}
 	defer conn.Close()
@@ -33,23 +33,26 @@ func (h *Handler) ChatWS(c *gin.Context) {
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			fmt.Println("read error:", err)
+			slog.Error("Read message error", "error", err)
 			break
 		}
 		var req entity.Request
 		if err := json.Unmarshal(msg, &req); err != nil {
-			fmt.Println("json parse error:", err)
+			slog.Error("JSON parse error", "error", err)
 			continue
 		}
 		request := req.Message
 
-		oldQueries, err := cache.GetUserQueries(h.Redis, ctx, "12345678", int64(5))
+		oldQueries, err := cache.GetUserQueries(h.Redis, ctx, chatRoomID, int64(5))
+
+		organizations, err := cache.GetChatOrganizations(h.Redis, ctx, "o"+chatRoomID, int64(5))
+
 		fmt.Println("Old queries:", oldQueries)
 
-		geminiResp := gemini.GetResponse(*h.Config, request, oldQueries)
+		geminiResp := gemini.GetResponse(*h.Config, request, oldQueries, organizations)
 
 		go func() {
-			if err := cache.AppendUserQuery(h.Redis, ctx, "12345678", geminiResp.EnrichedQuery); err != nil {
+			if err := cache.AppendUserQuery(h.Redis, ctx, chatRoomID, geminiResp.EnrichedQuery); err != nil {
 				slog.Warn("Failed to append user query", "error", err)
 			}
 		}()
@@ -65,7 +68,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 				},
 			})
 			if err != nil {
-				fmt.Println("write error:", err)
+				slog.Error("Write message error", "error", err)
 				break
 			}
 			err = conn.WriteJSON(map[string]any{
@@ -88,7 +91,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 				return
 			}
 		} else {
-			if err := sonar.StreamToWSOneOrg(*h.Config, h.UseCase, conn, request, geminiResp.EnrichedQuery, chatRoomID); err != nil {
+			if err := sonar.StreamToWSOneOrg(*h.Config, h.UseCase, *h.Redis,conn, request, geminiResp.EnrichedQuery, chatRoomID); err != nil {
 				_ = conn.WriteJSON(map[string]any{
 					"type":  "error",
 					"error": fmt.Sprintf("Sonar error: %v", err),
@@ -111,6 +114,4 @@ func (h *Handler) SaveResponce(request, chat_room_id, responce, gemini_request s
 		ImagesURL:     []string{},
 		Organizations: []entity.OrgInfo{},
 	})
-
-	fmt.Println("Saving chat log:", request, responce)
 }
