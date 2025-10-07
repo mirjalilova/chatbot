@@ -2,17 +2,26 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"math/rand"
 	"regexp"
 	"strconv"
+	"time"
 
 	"chatbot/internal/entity"
+	"chatbot/pkg/helper"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const phoneRegex = `^(\+998)?[0-9]{9}$`
+
+func isValidPhone(phone string) bool {
+	re := regexp.MustCompile(phoneRegex)
+	return re.MatchString(phone)
+}
 
 // Register godoc
 // @Summary Create a new user
@@ -81,21 +90,35 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	if !isValidPhone(reqBody.Login) {
+	if !isValidPhone(reqBody.PhoneNumber) {
 		c.JSON(409, gin.H{"message": "Incorrect phone number format"})
 		slog.Error("Incorrect phone number format")
 		return
 	}
 
-	res, err := h.UseCase.UserRepo.Login(context.Background(), &reqBody)
+	code, err := generateVerificationCode()
 	if err != nil {
-		c.JSON(500, gin.H{"Error logging in user:": err.Error()})
-		slog.Error("Error logging in user: ", "err", err)
+		c.JSON(500, gin.H{"Error generating verification code:": err.Error()})
+		slog.Error("Error generating verification code: ", "err", err)
 		return
 	}
 
-	slog.Info("User logged in successfully")
-	c.JSON(200, res)
+	go helper.SendSms(*h.Config, reqBody.PhoneNumber, code)
+
+	exist, err := h.UseCase.UserRepo.CheckExist(context.Background(), reqBody.PhoneNumber)
+	if err != nil {
+		c.JSON(500, gin.H{"Error checking user existence:": err.Error()})
+		slog.Error("Error checking user existence: ", "err", err)
+		return
+	}
+
+	if !exist {
+		c.JSON(200, gin.H{"exist": false, "code": code})
+		return
+	} else {
+		c.JSON(200, gin.H{"exist": true, "code": code})
+		return
+	}
 }
 
 // GetByIdUser godoc
@@ -257,7 +280,8 @@ func parsePaginationParams(c *gin.Context, limit, offset string) (int, int, erro
 	return limitValue, offsetValue, nil
 }
 
-func isValidPhone(phone string) bool {
-	re := regexp.MustCompile(phoneRegex)
-	return re.MatchString(phone)
+func generateVerificationCode() (string, error) {
+	rand.Seed(time.Now().UnixNano())
+	code := rand.Intn(899999) + 100000
+	return fmt.Sprintf("%06d", code), nil
 }

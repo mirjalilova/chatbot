@@ -787,7 +787,8 @@ const docTemplate = `{
                     "items": {
                         "type": "object",
                         "additionalProperties": {
-                            "type": "number"
+                            "type": "number",
+                            "format": "float64"
                         }
                     }
                 },
@@ -814,10 +815,7 @@ const docTemplate = `{
         "entity.LoginReq": {
             "type": "object",
             "properties": {
-                "login": {
-                    "type": "string"
-                },
-                "password": {
+                "phone_number": {
                     "type": "string"
                 }
             }

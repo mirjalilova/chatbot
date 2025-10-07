@@ -9,11 +9,8 @@ import (
 	"time"
 
 	"chatbot/config"
-	"chatbot/internal/controller/http/token"
 	"chatbot/internal/entity"
 	"chatbot/pkg/postgres"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepo struct {
@@ -50,38 +47,38 @@ func (r *UserRepo) Create(ctx context.Context, req *entity.CreateUser) (*entity.
 	}, nil
 }
 
-func (r *UserRepo) Login(ctx context.Context, req *entity.LoginReq) (*entity.LoginRes, error) {
-	query := `
-		SELECT
-			password,
-			id
-		FROM
-			users
-		WHERE
-			phone_number = $1
-		AND
-			deleted_at = 0
-	`
-	row := r.pg.Pool.QueryRow(ctx, query, req.Login)
-	var password string
-	var id string
-	err := row.Scan(&password, &id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("user not found")
-		}
-		return nil, err
-	}
+// func (r *UserRepo) Login(ctx context.Context, req *entity.LoginReq) (*entity.LoginRes, error) {
+// 	query := `
+// 		SELECT
+// 			password,
+// 			id
+// 		FROM
+// 			users
+// 		WHERE
+// 			phone_number = $1
+// 		AND
+// 			deleted_at = 0
+// 	`
+// 	row := r.pg.Pool.QueryRow(ctx, query, req.Login)
+// 	var password string
+// 	var id string
+// 	err := row.Scan(&password, &id)
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			return nil, errors.New("user not found")
+// 		}
+// 		return nil, err
+// 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(req.Password)); err != nil {
-		return nil, errors.New("invalid login or password")
-	}
+// 	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(req.Password)); err != nil {
+// 		return nil, errors.New("invalid login or password")
+// 	}
 
-	token := token.GenerateJWTToken(id)
+// 	token := token.GenerateJWTToken(id)
 
-	return &entity.LoginRes{Token: token.AccessToken,
-		Message: "success"}, nil
-}
+// 	return &entity.LoginRes{Token: token.AccessToken,
+// 		Message: "success"}, nil
+// }
 
 func (r *UserRepo) GetById(ctx context.Context, req *entity.ById) (*entity.UserInfo, error) {
 
@@ -220,4 +217,15 @@ func (r *UserRepo) Delete(ctx context.Context, req *entity.ById) error {
 	}
 
 	return nil
+}
+
+func (r *UserRepo) CheckExist(ctx context.Context, phone string) (bool, error) {
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE phone_number = $1 AND deleted_at = 0)`
+	err := r.pg.Pool.QueryRow(ctx, query, phone).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }

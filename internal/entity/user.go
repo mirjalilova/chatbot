@@ -30,8 +30,7 @@ type UserList struct {
 }
 
 type LoginReq struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	PhoneNumber string `json:"phone_number"`
 }
 
 type LoginRes struct {

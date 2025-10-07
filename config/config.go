@@ -16,6 +16,7 @@ type (
 		ApiKey           `yaml:"api_key"`
 		JWT              `yaml:"jwt"`
 		PerplexityAPIKey `yaml:"perplexity_api_key"`
+		SMS_TOKEN        `yaml:"sms_token"`
 		// OpenAI `yaml:"openai"`
 	}
 
@@ -56,6 +57,11 @@ type (
 		Key string `env-required:"true" yaml:"key" env:"PERPLEXITY_API_KEY"`
 	}
 
+	// SMS_TOKEN -.
+	SMS_TOKEN struct {
+		Token string `env-required:"true" yaml:"token" env:"SMS_TOKEN"`
+	}
+	
 	// // OpenAI -.
 	// OpenAI struct {
 	// 	ApiKey      string `env-required:"true" yaml:"api_key" env:"OPENAI_API_KEY"`

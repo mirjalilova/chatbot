@@ -13,7 +13,8 @@ import (
 type (
 	// UserRepo -.
 	UserRepoI interface {
-		Login(ctx context.Context, req *entity.LoginReq) (*entity.LoginRes, error)
+		// Login(ctx context.Context, req *entity.LoginReq) (*entity.LoginRes, error)
+		CheckExist(ctx context.Context, phone string) (bool, error)
 		Create(ctx context.Context, req *entity.CreateUser) (*entity.UserInfo, error)
 		GetById(ctx context.Context, req *entity.ById) (*entity.UserInfo, error)
 		GetAll(ctx context.Context, req *entity.Filter, status string) (*entity.UserList, error)

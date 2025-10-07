@@ -1,11 +1,10 @@
-
-CREATE TYPE role AS ENUM ('user', 'admin', 'pro-user');
+CREATE TYPE role AS ENUM ('guest', 'user', 'admin', 'pro-user');
 
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name VARCHAR(200) NOT NULL,
   phone_number VARCHAR(13) UNIQUE NOT NULL,
-  password TEXT,
+  role role NOT NULL DEFAULT 'user',
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   deleted_at BIGINT NOT NULL DEFAULT 0
@@ -15,11 +14,8 @@ CREATE TABLE IF NOT EXISTS restrictions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type role NOT NULL,
   request_limit INT NOT NULL,
-  character_limit INT,
-  chat_limit INT,
   time_limit INT
 );
-
 
 CREATE TABLE IF NOT EXISTS chat_rooms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
