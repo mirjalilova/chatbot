@@ -26,7 +26,7 @@ func NewRestrictionRepo(pg *postgres.Postgres, config *config.Config) *Restricti
 
 func (r *RestrictionRepo) GetById(ctx context.Context, id *entity.ById) (*entity.Restriction, error) {
 	query := `
-		SELECT id, type, request_limit, character_limit, chat_limit
+		SELECT id, type, request_limit
 		FROM restrictions
 		WHERE id = $1`
 
@@ -35,9 +35,6 @@ func (r *RestrictionRepo) GetById(ctx context.Context, id *entity.ById) (*entity
 		&res.ID,
 		&res.Type,
 		&res.RequestLimit,
-		&res.CharacterLimit,
-		&res.ChatLimit,
-		// &res.TimeLimit,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -51,7 +48,7 @@ func (r *RestrictionRepo) GetById(ctx context.Context, id *entity.ById) (*entity
 
 func (r *RestrictionRepo) GetAll(ctx context.Context, filter *entity.Filter) (*entity.ListRestriction, error) {
 	query := `
-		SELECT id, type, request_limit, character_limit, chat_limit
+		SELECT id, type, request_limit
 		FROM restrictions
 		ORDER BY type`
 
@@ -79,7 +76,7 @@ func (r *RestrictionRepo) GetAll(ctx context.Context, filter *entity.Filter) (*e
 	var result entity.ListRestriction
 	for rows.Next() {
 		var r entity.Restriction
-		err := rows.Scan(&r.ID, &r.Type, &r.RequestLimit, &r.CharacterLimit, &r.ChatLimit)
+		err := rows.Scan(&r.ID, &r.Type, &r.RequestLimit)
 		if err != nil {
 			return nil, err
 		}
@@ -98,14 +95,7 @@ func (r *RestrictionRepo) Update(ctx context.Context, req *entity.UpdateRestrict
 		sets = append(sets, " request_limit = $"+strconv.Itoa(len(args)+1))
 		args = append(args, *req.RequestLimit)
 	}
-	if req.CharacterLimit != nil {
-		sets = append(sets, " character_limit = $"+strconv.Itoa(len(args)+1))
-		args = append(args, *req.CharacterLimit)
-	}
-	if req.ChatLimit != nil {
-		sets = append(sets, " chat_limit = $"+strconv.Itoa(len(args)+1))
-		args = append(args, *req.ChatLimit)
-	}
+
 	// if req.TimeLimit != nil {
 	// 	sets = append(sets, " time_limit = $"+strconv.Itoa(len(args)+1))
 	// 	args = append(args, *req.TimeLimit)

@@ -193,10 +193,10 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 		return fmt.Errorf("failed to get user role: %w", err)
 	}
 
-	var requestLimit, chatLimit int
+	var requestLimit int
 	err = r.pg.Pool.QueryRow(ctx, `
-		SELECT request_limit, chat_limit FROM restrictions WHERE type = $1
-	`, role).Scan(&requestLimit, &chatLimit)
+		SELECT request_limit FROM restrictions WHERE type = $1
+	`, role).Scan(&requestLimit)
 	if err != nil {
 		return fmt.Errorf("failed to get restrictions: %w", err)
 	}
@@ -216,18 +216,18 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 		return errors.New("kunlik request limiti tugadi")
 	}
 
-	var chatRequestCount int
-	err = r.pg.Pool.QueryRow(ctx, `
-		SELECT COUNT(id) FROM chat 
-		WHERE chat_room_id = $1 AND deleted_at = 0
-	`, chatRoomID).Scan(&chatRequestCount)
-	if err != nil {
-		return fmt.Errorf("failed to count chat room requests: %w", err)
-	}
+	// var chatRequestCount int
+	// err = r.pg.Pool.QueryRow(ctx, `
+	// 	SELECT COUNT(id) FROM chat 
+	// 	WHERE chat_room_id = $1 AND deleted_at = 0
+	// `, chatRoomID).Scan(&chatRequestCount)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to count chat room requests: %w", err)
+	// }
 
-	if chatRequestCount >= chatLimit {
-		return errors.New("bu chatdagi savollar limiti tugagan, yangi chat yarating")
-	}
+	// if chatRequestCount >= chatLimit {
+	// 	return errors.New("bu chatdagi savollar limiti tugagan, yangi chat yarating")
+	// }
 
 	return nil
 }
