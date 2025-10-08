@@ -229,3 +229,28 @@ func (r *UserRepo) CheckExist(ctx context.Context, phone string) (bool, error) {
 
 	return exists, nil
 }
+
+func (r *UserRepo) GetByPhone(ctx context.Context, phone string) (*entity.GetByPhone, error) {
+	var res entity.GetByPhone
+	query := `
+		SELECT
+			id,
+			role
+		FROM
+			users
+		WHERE
+			phone_number = $1
+		AND
+			deleted_at = 0
+	`
+	row := r.pg.Pool.QueryRow(ctx, query, phone)
+	err := row.Scan(
+		&res.Id,
+		&res.Role,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}

@@ -33,7 +33,18 @@ type LoginReq struct {
 	PhoneNumber string `json:"phone_number"`
 }
 
+type VerifyReq struct {
+	PhoneNumber string `json:"phone_number"`
+	Code        string `json:"code"`
+}
+
 type LoginRes struct {
 	Message string `json:"message"`
 	Token   string `json:"token"`
 }
+
+type GetByPhone struct {
+	Id string `json:"id"`
+	Role string `json:"role"`
+}
+

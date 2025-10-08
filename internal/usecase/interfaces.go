@@ -20,6 +20,7 @@ type (
 		GetAll(ctx context.Context, req *entity.Filter, status string) (*entity.UserList, error)
 		Update(ctx context.Context, req *entity.UpdateUser) error
 		Delete(ctx context.Context, req *entity.ById) error
+		GetByPhone(ctx context.Context, phone string) (*entity.GetByPhone, error)
 	}
 
 	// RestrictionRepo -.

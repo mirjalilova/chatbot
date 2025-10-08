@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"net/http"
 	"regexp"
 	"strconv"
 	"time"
 
+	"chatbot/internal/controller/http/token"
 	"chatbot/internal/entity"
+	"chatbot/pkg/cache"
 	"chatbot/pkg/helper"
 
 	"github.com/gin-gonic/gin"
@@ -105,6 +108,8 @@ func (h *Handler) Login(c *gin.Context) {
 
 	go helper.SendSms(*h.Config, reqBody.PhoneNumber, code)
 
+	go cache.SaveVerificationCode(h.Redis, context.Background(), reqBody.PhoneNumber, code, 3*time.Minute)
+
 	exist, err := h.UseCase.UserRepo.CheckExist(context.Background(), reqBody.PhoneNumber)
 	if err != nil {
 		c.JSON(500, gin.H{"Error checking user existence:": err.Error()})
@@ -119,6 +124,67 @@ func (h *Handler) Login(c *gin.Context) {
 		c.JSON(200, gin.H{"exist": true, "code": code})
 		return
 	}
+}
+
+// Verify godoc
+// @Summary Verify user login
+// @Description Verify user by SMS code
+// @Tags Users
+// @Accept  json
+// @Produce  json
+// @Param user body entity.VerifyReq true "User Verify Details"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/verify [post]
+func (h *Handler) Verify(c *gin.Context) {
+	var req struct {
+		Phone string `json:"phone"`
+		Code  string `json:"code"`
+	}
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	storedCode, err := cache.GetVerificationCode(h.Redis, context.Background(), req.Phone)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Verification code expired or not found"})
+		slog.Error("Error getting verification code", "err", err)
+		return
+	}
+
+	if storedCode != req.Code {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect verification code"})
+		return
+	}
+
+	user, err := h.UseCase.UserRepo.GetByPhone(context.Background(), req.Phone)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving user"})
+		slog.Error("Error retrieving user by phone: ", "err", err)
+		return
+	}
+
+	tokenStr := token.GenerateJWTToken(user.Id, user.Role)
+
+	c.SetCookie(
+		"access_token",       
+		tokenStr.AccessToken, 
+		3600,               
+		"/",                 
+		"",                 
+		true,                
+		true,               
+	)
+
+	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.Phone)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Verification successful",
+	})
 }
 
 // GetByIdUser godoc
@@ -250,6 +316,19 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 	slog.Info("User deleted successfully")
 	c.JSON(200, "User deleted successfully")
 }
+
+// Logout godoc
+// @Summary User logout
+// @Description Clear user cookie
+// @Tags Users
+// @Success 200 {object} string
+// @Router /users/logout [post]
+func (h *Handler) Logout(c *gin.Context) {
+
+	c.SetCookie("access_token", "", -1, "/", "", true, true)
+	c.JSON(200, gin.H{"message": "Logged out successfully"})
+}
+
 
 func parsePaginationParams(c *gin.Context, limit, offset string) (int, int, error) {
 	limitValue := 10

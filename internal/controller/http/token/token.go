@@ -19,14 +19,15 @@ type Tokens struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func GenerateJWTToken(userID string) *Tokens {
+func GenerateJWTToken(userID, role string) *Tokens {
 	accessToken := jwt.New(jwt.SigningMethodHS256)
 	refreshToken := jwt.New(jwt.SigningMethodHS256)
 
 	claims := accessToken.Claims.(jwt.MapClaims)
 	claims["id"] = userID
+	claims["role"] = role
 	claims["iat"] = time.Now().Unix()
-	claims["exp"] = time.Now().Add(48 * time.Hour).Unix()
+	claims["exp"] = time.Now().Add(168 * time.Hour).Unix()
 	access, err := accessToken.SignedString([]byte(signingKey))
 	if err != nil {
 		log.Fatal("error while generating access token : ", err)
@@ -35,6 +36,7 @@ func GenerateJWTToken(userID string) *Tokens {
 
 	rftClaims := refreshToken.Claims.(jwt.MapClaims)
 	rftClaims["id"] = userID
+	rftClaims["role"] = role
 	rftClaims["iat"] = time.Now().Unix()
 	rftClaims["exp"] = time.Now().Add(720 * time.Hour).Unix()
 	refresh, err := refreshToken.SignedString([]byte(signingKey))
