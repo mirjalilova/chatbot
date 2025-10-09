@@ -149,10 +149,10 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 		return fmt.Errorf("failed to parse structured content: %v", err)
 	}
 
-	res := &entity.Response{
-		Citations: citations,
-		Data:      orgs,
-	}
+	// res := &entity.Response{
+	// 	Citations: citations,
+	// 	Data:      orgs,
+	// }
 
 	err = conn.WriteJSON(map[string]any{
 		"content": map[string]any{
@@ -173,12 +173,12 @@ func StreamToWS(cfg config.Config, db *usecase.UseCase, conn *websocket.Conn, us
 		return err
 	}
 
-	resBytes, err := json.Marshal(res)
-	if err != nil {
-		return err
-	}
+// "	resBytes, err := json.Marshal(res)
+// 	if err != nil {
+// 		return err
+// 	}"
 
-	go SaveResponce(db, userQuestion, chatRoomId, string(resBytes), geminiQuestion, citations, nil, nil, orgs)
+	go SaveResponce(db, userQuestion, chatRoomId, "", geminiQuestion, citations, nil, nil, orgs)
 
 	return nil
 }

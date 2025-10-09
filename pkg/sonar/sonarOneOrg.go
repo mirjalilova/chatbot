@@ -340,7 +340,7 @@ func SaveResponce(db *usecase.UseCase, request, chat_room_id, responce, gemini_r
 		ChatRoomID:    chat_room_id,
 		UserRequest:   request,
 		GeminiRequest: gemini_request,
-		Responce:      "",
+		Responce:      responce,
 		CitationURLs:  citation_urls,
 		Location:      locStrings,
 		ImagesURL:     images_url,
