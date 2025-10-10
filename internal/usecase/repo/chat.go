@@ -109,11 +109,21 @@ func (r *ChatRepo) GetChatRoomByUserId(ctx context.Context, req *entity.GetChatR
 
 func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById, limit, offset int) (*entity.ChatList, error) {
 	query := `
-		SELECT COUNT(id) OVER () AS total_count, id, chat_room_id, user_request, responce, citation_urls, location, images_url, organizations, created_at
-		FROM chat
-		WHERE chat_room_id = $1 AND deleted_at = 0
-		LIMIT $2 OFFSET $3
-		ORDER BY created_at ASC`
+	SELECT COUNT(id) OVER () AS total_count,
+	       id,
+	       chat_room_id,
+	       user_request,
+	       responce,
+	       citation_urls,
+	       location,
+	       images_url,
+	       organizations,
+	       created_at
+	FROM chat
+	WHERE chat_room_id = $1 AND deleted_at = 0
+	ORDER BY created_at ASC
+	LIMIT $2 OFFSET $3;
+`
 
 	rows, err := r.pg.Pool.Query(ctx, query, id.Id, limit, offset)
 	if err != nil {
