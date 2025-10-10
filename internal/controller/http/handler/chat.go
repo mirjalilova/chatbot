@@ -90,6 +90,7 @@ func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id query string true "Chat Room ID"
+// @Param limit query int false "Limit"
 // @Success 200 {object} entity.ChatList
 // @Failure 400 {object} string
 // @Failure 500 {object} string
@@ -97,7 +98,17 @@ func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
 // @Router /chat/message [get]
 func (h *Handler) GetChatRoomChat(c *gin.Context) {
 
-	res, err := h.UseCase.ChatRepo.GetChatRoomChat(context.Background(), &entity.ById{Id: c.Query("id")})
+	offset := "0"
+	limit := c.Query("limit")
+
+	limitValue, offsetValue, err := parsePaginationParams(c, limit, offset)
+	if err != nil {
+		c.JSON(400, gin.H{"Error parsing pagination parameters:": err.Error()})
+		slog.Error("Error parsing pagination parameters: ", "err", err)
+		return
+	}
+
+	res, err := h.UseCase.ChatRepo.GetChatRoomChat(context.Background(), &entity.ById{Id: c.Query("id")}, limitValue, offsetValue)
 	if err != nil {
 		c.JSON(500, gin.H{"Error getting Chat rooms by ID: ": err.Error()})
 		slog.Error("Error getting Chat rooms by ID: ", "err", err)

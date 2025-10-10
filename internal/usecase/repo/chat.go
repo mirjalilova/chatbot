@@ -107,14 +107,15 @@ func (r *ChatRepo) GetChatRoomByUserId(ctx context.Context, req *entity.GetChatR
 	return &result, nil
 }
 
-func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entity.ChatList, error) {
+func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById, limit, offset int) (*entity.ChatList, error) {
 	query := `
-		SELECT id, chat_room_id, user_request, responce, citation_urls, location, images_url, organizations, created_at
+		SELECT COUNT(id) OVER () AS total_count, id, chat_room_id, user_request, responce, citation_urls, location, images_url, organizations, created_at
 		FROM chat
 		WHERE chat_room_id = $1 AND deleted_at = 0
+		LIMIT $2 OFFSET $3
 		ORDER BY created_at ASC`
 
-	rows, err := r.pg.Pool.Query(ctx, query, id.Id)
+	rows, err := r.pg.Pool.Query(ctx, query, id.Id, limit, offset)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("chat rooms list is empty")
@@ -123,6 +124,7 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 	}
 	defer rows.Close()
 
+	var total_count int
 	var result entity.ChatList
 	for rows.Next() {
 		var (
@@ -137,7 +139,7 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 			createdAt  time.Time
 		)
 
-		err := rows.Scan(&id, &chatRoomID, &userReq, &response, &citations, &locRaw, &images, &orgs, &createdAt)
+		err := rows.Scan(&total_count, &id, &chatRoomID, &userReq, &response, &citations, &locRaw, &images, &orgs, &createdAt)
 		if err != nil {
 			return nil, err
 		}
@@ -179,6 +181,15 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById) (*entit
 		})
 	}
 
+	var hasMore bool
+	if limit < total_count {
+		hasMore = true
+	} else {
+		hasMore = false
+	}
+	result.Count = total_count
+	result.HasMore = hasMore
+
 	return &result, nil
 }
 
@@ -218,7 +229,7 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 
 	// var chatRequestCount int
 	// err = r.pg.Pool.QueryRow(ctx, `
-	// 	SELECT COUNT(id) FROM chat 
+	// 	SELECT COUNT(id) FROM chat
 	// 	WHERE chat_room_id = $1 AND deleted_at = 0
 	// `, chatRoomID).Scan(&chatRequestCount)
 	// if err != nil {

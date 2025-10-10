@@ -36,7 +36,7 @@ type (
 		Create(ctx context.Context, req *entity.ChatCreate) error
 		CreateChatRoom(ctx context.Context, req *entity.ChatRoomCreate) (string, error)
 		GetChatRoomByUserId(ctx context.Context, id *entity.GetChatRoomReq) (*entity.ChatRoomList, error)
-		GetChatRoomChat(ctx context.Context, id *entity.ById) (*entity.ChatList, error)
+		GetChatRoomChat(ctx context.Context, id *entity.ById, limit, offset int) (*entity.ChatList, error)
 		Check(ctx context.Context, user_id, chatRoomID string) error
 		DeleteChatRoom(ctx context.Context, id *entity.ById) error
 	}

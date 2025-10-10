@@ -60,7 +60,9 @@ type Content struct {
 }
 
 type ChatList struct {
-	Chats []ChatResponce `json:"chats"`
+	Chats   []ChatResponce `json:"chats"`
+	Count   int            `json:"count"`
+	HasMore bool           `json:"has_more"`
 }
 
 type AskResponse struct {

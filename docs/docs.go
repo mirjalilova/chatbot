@@ -40,6 +40,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -586,6 +592,23 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/logout": {
+            "post": {
+                "description": "Clear user cookie",
+                "tags": [
+                    "Users"
+                ],
+                "summary": "User logout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/users/register": {
             "post": {
                 "security": [
@@ -694,6 +717,70 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/verify": {
+            "post": {
+                "description": "Verify user by SMS code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Verify user login",
+                "parameters": [
+                    {
+                        "description": "User Verify Details",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.VerifyReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -705,6 +792,12 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/entity.ChatResponce"
                     }
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "has_more": {
+                    "type": "boolean"
                 }
             }
         },
@@ -907,6 +1000,17 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/entity.UserInfo"
                     }
+                }
+            }
+        },
+        "entity.VerifyReq": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
                 }
             }
         }

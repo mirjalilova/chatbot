@@ -6,6 +6,10 @@ definitions:
         items:
           $ref: '#/definitions/entity.ChatResponce'
         type: array
+      count:
+        type: integer
+      has_more:
+        type: boolean
     type: object
   entity.ChatResponce:
     properties:
@@ -138,6 +142,13 @@ definitions:
           $ref: '#/definitions/entity.UserInfo'
         type: array
     type: object
+  entity.VerifyReq:
+    properties:
+      code:
+        type: string
+      phone_number:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is a sample server Chatbot server.
@@ -155,6 +166,10 @@ paths:
         name: id
         required: true
         type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -505,6 +520,17 @@ paths:
       summary: User login
       tags:
       - Users
+  /users/logout:
+    post:
+      description: Clear user cookie
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: User logout
+      tags:
+      - Users
   /users/register:
     post:
       consumes:
@@ -572,6 +598,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a User
+      tags:
+      - Users
+  /users/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify user by SMS code
+      parameters:
+      - description: User Verify Details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/entity.VerifyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Verify user login
       tags:
       - Users
 securityDefinitions:
