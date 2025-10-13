@@ -62,7 +62,6 @@ definitions:
       location:
         items:
           additionalProperties:
-            format: float64
             type: number
           type: object
         type: array
@@ -169,6 +168,10 @@ paths:
       - description: Limit
         in: query
         name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
         type: integer
       produces:
       - application/json

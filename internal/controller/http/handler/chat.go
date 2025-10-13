@@ -91,6 +91,7 @@ func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
 // @Produce  json
 // @Param id query string true "Chat Room ID"
 // @Param limit query int false "Limit"
+// @Param offset query int false "Offset"
 // @Success 200 {object} entity.ChatList
 // @Failure 400 {object} string
 // @Failure 500 {object} string
@@ -98,7 +99,7 @@ func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
 // @Router /chat/message [get]
 func (h *Handler) GetChatRoomChat(c *gin.Context) {
 
-	offset := "0"
+	offset := c.Query("offset")
 	limit := c.Query("limit")
 
 	limitValue, offsetValue, err := parsePaginationParams(c, limit, offset)
