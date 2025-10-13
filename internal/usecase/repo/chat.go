@@ -121,7 +121,7 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById, limit, 
 	       created_at
 	FROM chat
 	WHERE chat_room_id = $1 AND deleted_at = 0
-	ORDER BY created_at DASC
+	ORDER BY created_at DESC
 	LIMIT $2 OFFSET $3;
 `
 
