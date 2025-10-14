@@ -19,6 +19,7 @@ import (
 	"chatbot/config"
 	_ "chatbot/docs"
 	"chatbot/internal/controller/http/handler"
+	middleware "chatbot/internal/controller/http/middlerware"
 
 	// middleware "chatbot/internal/controller/http/middlerware"
 	"chatbot/internal/usecase"
@@ -88,7 +89,7 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 	{
 		users.POST("/login", handlerV1.Login)
 		users.POST("/verify", handlerV1.Verify)
-		users.GET("/profile", handlerV1.GetByIdUser)
+		users.GET("/profile", middleware.NewAuth(enforcer), handlerV1.GetByIdUser)
 		users.GET("/list", handlerV1.GetAllUsers)
 		// users.POST("/register", handlerV1.Register)
 		users.PUT("/update", handlerV1.UpdateUser)

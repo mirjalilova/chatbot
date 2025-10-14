@@ -62,6 +62,7 @@ definitions:
       location:
         items:
           additionalProperties:
+            format: float64
             type: number
           type: object
         type: array
@@ -503,12 +504,6 @@ paths:
       consumes:
       - application/json
       description: Get a User by their ID
-      parameters:
-      - description: User ID
-        in: query
-        name: id
-        required: true
-        type: string
       produces:
       - application/json
       responses:
