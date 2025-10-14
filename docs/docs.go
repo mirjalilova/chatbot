@@ -438,55 +438,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/get": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a User by their ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Get User by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.UserInfo"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/users/list": {
             "get": {
                 "security": [
@@ -615,14 +566,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/register": {
-            "post": {
+        "/users/profile": {
+            "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Create a new user with the provided details",
+                "description": "Get a User by their ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -632,23 +583,21 @@ const docTemplate = `{
                 "tags": [
                     "Users"
                 ],
-                "summary": "Create a new user",
+                "summary": "Get User by ID",
                 "parameters": [
                     {
-                        "description": "User Details",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.CreateUser"
-                        }
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/entity.UserInfo"
                         }
                     },
                     "400": {
@@ -896,20 +845,6 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.CreateUser": {
-            "type": "object",
-            "properties": {
-                "full_name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                }
-            }
-        },
         "entity.LoginReq": {
             "type": "object",
             "properties": {
@@ -980,6 +915,9 @@ const docTemplate = `{
         "entity.UserInfo": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -990,6 +928,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone_number": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 }
             }

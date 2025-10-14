@@ -1,10 +1,11 @@
-CREATE TYPE role AS ENUM ('guest', 'user', 'admin', 'pro-user');
+CREATE TYPE role AS ENUM ('guest', 'user', 'admin', 'pro-user', 'business-user');
 
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  full_name VARCHAR(200) NOT NULL,
+  full_name VARCHAR(200),
   phone_number VARCHAR(13) UNIQUE NOT NULL,
   role role NOT NULL DEFAULT 'user',
+  avatar TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   deleted_at BIGINT NOT NULL DEFAULT 0

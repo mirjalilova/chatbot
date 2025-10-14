@@ -13,10 +13,8 @@ import (
 	"chatbot/internal/controller/http/token"
 	"chatbot/internal/entity"
 	"chatbot/pkg/cache"
-	"chatbot/pkg/helper"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 const phoneRegex = `^(\+998)?[0-9]{9}$`
@@ -26,51 +24,51 @@ func isValidPhone(phone string) bool {
 	return re.MatchString(phone)
 }
 
-// Register godoc
-// @Summary Create a new user
-// @Description Create a new user with the provided details
-// @Tags Users
-// @Accept  json
-// @Produce  json
-// @Param user body entity.CreateUser true "User Details"
-// @Success 200 {object} string
-// @Failure 400 {object}  string
-// @Failure 500 {object} string
-// @Security BearerAuth
-// @Router /users/register [post]
-func (h *Handler) Register(c *gin.Context) {
-	reqBody := entity.CreateUser{}
-	err := c.BindJSON(&reqBody)
-	if err != nil {
-		c.JSON(400, gin.H{"Error binding request body": err.Error()})
-		slog.Error("Error binding request body: ", "err", err)
-		return
-	}
+// // Register godoc
+// // @Summary Create a new user
+// // @Description Create a new user with the provided details
+// // @Tags Users
+// // @Accept  json
+// // @Produce  json
+// // @Param user body entity.CreateUser true "User Details"
+// // @Success 200 {object} string
+// // @Failure 400 {object}  string
+// // @Failure 500 {object} string
+// // @Security BearerAuth
+// // @Router /users/register [post]
+// func (h *Handler) Register(c *gin.Context) {
+// 	reqBody := entity.CreateUser{}
+// 	err := c.BindJSON(&reqBody)
+// 	if err != nil {
+// 		c.JSON(400, gin.H{"Error binding request body": err.Error()})
+// 		slog.Error("Error binding request body: ", "err", err)
+// 		return
+// 	}
 
-	if !isValidPhone(reqBody.PhoneNumber) {
-		c.JSON(409, gin.H{"message": "Incorrect phone number format"})
-		slog.Error("Incorrect phone number format")
-		return
-	}
+// 	if !isValidPhone(reqBody.PhoneNumber) {
+// 		c.JSON(409, gin.H{"message": "Incorrect phone number format"})
+// 		slog.Error("Incorrect phone number format")
+// 		return
+// 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(409, gin.H{"error": "Server error"})
-		slog.Error("Error hashing password: ", "err", err)
-		return
-	}
-	reqBody.Password = string(hashedPassword)
+// 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(reqBody.Password), bcrypt.DefaultCost)
+// 	if err != nil {
+// 		c.JSON(409, gin.H{"error": "Server error"})
+// 		slog.Error("Error hashing password: ", "err", err)
+// 		return
+// 	}
+// 	reqBody.Password = string(hashedPassword)
 
-	_, err = h.UseCase.UserRepo.Create(context.Background(), &reqBody)
-	if err != nil {
-		c.JSON(500, gin.H{"Error creating user:": err.Error()})
-		slog.Error("Error creating user: ", "err", err)
-		return
-	}
+// 	_, err = h.UseCase.UserRepo.Create(context.Background(), &reqBody)
+// 	if err != nil {
+// 		c.JSON(500, gin.H{"Error creating user:": err.Error()})
+// 		slog.Error("Error creating user: ", "err", err)
+// 		return
+// 	}
 
-	slog.Info("New user created successfully")
-	c.JSON(200, gin.H{"Massage": "User registered successfully"})
-}
+// 	slog.Info("New user created successfully")
+// 	c.JSON(200, gin.H{"Massage": "User registered successfully"})
+// }
 
 // Login godoc
 // @Summary User login
@@ -106,7 +104,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	go helper.SendSms(*h.Config, reqBody.PhoneNumber, code)
+	// go helper.SendSms(*h.Config, reqBody.PhoneNumber, code)
 
 	go cache.SaveVerificationCode(h.Redis, context.Background(), reqBody.PhoneNumber, code, 3*time.Minute)
 
@@ -118,10 +116,19 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	if !exist {
-		c.JSON(200, gin.H{"exist": false, "code": code})
+		_, err := h.UseCase.UserRepo.Create(context.Background(), &entity.CreateUser{
+			PhoneNumber: reqBody.PhoneNumber,
+		})
+		if err != nil {
+			c.JSON(500, gin.H{"Error creating user:": err.Error()})
+			slog.Error("Error creating user: ", "err", err)
+			return
+		}
+		slog.Info("New user created successfully")
+		c.JSON(200, gin.H{"code": code})
 		return
 	} else {
-		c.JSON(200, gin.H{"exist": true, "code": code})
+		c.JSON(200, gin.H{"code": code})
 		return
 	}
 }
@@ -139,17 +146,15 @@ func (h *Handler) Login(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /users/verify [post]
 func (h *Handler) Verify(c *gin.Context) {
-	var req struct {
-		Phone string `json:"phone"`
-		Code  string `json:"code"`
-	}
+	var req entity.VerifyReq
 
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
-	storedCode, err := cache.GetVerificationCode(h.Redis, context.Background(), req.Phone)
+	fmt.Println(req)
+	storedCode, err := cache.GetVerificationCode(h.Redis, context.Background(), req.PhoneNumber)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Verification code expired or not found"})
 		slog.Error("Error getting verification code", "err", err)
@@ -161,7 +166,7 @@ func (h *Handler) Verify(c *gin.Context) {
 		return
 	}
 
-	user, err := h.UseCase.UserRepo.GetByPhone(context.Background(), req.Phone)
+	user, err := h.UseCase.UserRepo.GetByPhone(context.Background(), req.PhoneNumber)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving user"})
 		slog.Error("Error retrieving user by phone: ", "err", err)
@@ -171,16 +176,16 @@ func (h *Handler) Verify(c *gin.Context) {
 	tokenStr := token.GenerateJWTToken(user.Id, user.Role)
 
 	c.SetCookie(
-		"access_token",       
-		tokenStr.AccessToken, 
-		3600,               
-		"/",                 
-		"",                 
-		true,                
-		true,               
+		"access_token",
+		tokenStr.AccessToken,
+		3600,
+		"/",
+		"",
+		true,
+		true,
 	)
 
-	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.Phone)
+	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.PhoneNumber)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Verification successful",
@@ -198,7 +203,7 @@ func (h *Handler) Verify(c *gin.Context) {
 // @Failure 400 {object} string
 // @Failure 500 {object} string
 // @Security BearerAuth
-// @Router /users/get [get]
+// @Router /users/profile [get]
 func (h *Handler) GetByIdUser(c *gin.Context) {
 
 	res, err := h.UseCase.UserRepo.GetById(context.Background(), &entity.ById{Id: c.Query("id")})
@@ -328,7 +333,6 @@ func (h *Handler) Logout(c *gin.Context) {
 	c.SetCookie("access_token", "", -1, "/", "", true, true)
 	c.JSON(200, gin.H{"message": "Logged out successfully"})
 }
-
 
 func parsePaginationParams(c *gin.Context, limit, offset string) (int, int, error) {
 	limitValue := 10

@@ -3,13 +3,15 @@ package entity
 type CreateUser struct {
 	FullName    string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
+	Avatar      string `json:"avatar"`
 }
 
 type UserInfo struct {
 	ID          string `json:"id"`
-	FullName    string `json:"full_name"`
+	FullName    *string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`
+	Role        string `json:"role"`
+	Avatar      *string `json:"avatar"`
 	CreatedAt   string `json:"created_at"`
 }
 
@@ -17,6 +19,7 @@ type UpdateUser struct {
 	Id          string `json:"id"`
 	FullName    string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`
+	Avatar      string `json:"avatar"`
 }
 
 type UpdateUserBody struct {
@@ -44,7 +47,6 @@ type LoginRes struct {
 }
 
 type GetByPhone struct {
-	Id string `json:"id"`
+	Id   string `json:"id"`
 	Role string `json:"role"`
 }
-

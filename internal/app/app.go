@@ -74,6 +74,7 @@ func Run(cfg *config.Config) {
 	}
 	defer gemini_client.Close()
 
+	// redis
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "redis:6379",
 		Password: "4545",

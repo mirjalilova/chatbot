@@ -69,15 +69,6 @@ definitions:
       text:
         type: string
     type: object
-  entity.CreateUser:
-    properties:
-      full_name:
-        type: string
-      password:
-        type: string
-      phone_number:
-        type: string
-    type: object
   entity.LoginReq:
     properties:
       phone_number:
@@ -123,6 +114,8 @@ definitions:
     type: object
   entity.UserInfo:
     properties:
+      avatar:
+        type: string
       created_at:
         type: string
       full_name:
@@ -130,6 +123,8 @@ definitions:
       id:
         type: string
       phone_number:
+        type: string
+      role:
         type: string
     type: object
   entity.UserList:
@@ -422,37 +417,6 @@ paths:
       summary: Delete a User
       tags:
       - Users
-  /users/get:
-    get:
-      consumes:
-      - application/json
-      description: Get a User by their ID
-      parameters:
-      - description: User ID
-        in: query
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.UserInfo'
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Get User by ID
-      tags:
-      - Users
   /users/list:
     get:
       consumes:
@@ -534,25 +498,24 @@ paths:
       summary: User logout
       tags:
       - Users
-  /users/register:
-    post:
+  /users/profile:
+    get:
       consumes:
       - application/json
-      description: Create a new user with the provided details
+      description: Get a User by their ID
       parameters:
-      - description: User Details
-        in: body
-        name: user
+      - description: User ID
+        in: query
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/entity.CreateUser'
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
+            $ref: '#/definitions/entity.UserInfo'
         "400":
           description: Bad Request
           schema:
@@ -563,7 +526,7 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Create a new user
+      summary: Get User by ID
       tags:
       - Users
   /users/update:

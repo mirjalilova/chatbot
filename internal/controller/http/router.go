@@ -87,9 +87,10 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 	users := engine.Group("/users")
 	{
 		users.POST("/login", handlerV1.Login)
-		users.GET("/get", handlerV1.GetByIdUser)
+		users.POST("/verify", handlerV1.Verify)
+		users.GET("/profile", handlerV1.GetByIdUser)
 		users.GET("/list", handlerV1.GetAllUsers)
-		users.POST("/register", handlerV1.Register)
+		// users.POST("/register", handlerV1.Register)
 		users.PUT("/update", handlerV1.UpdateUser)
 		users.DELETE("/delete", handlerV1.DeleteUser)
 	}

@@ -31,13 +31,11 @@ func (r *UserRepo) Create(ctx context.Context, req *entity.CreateUser) (*entity.
 
 	query := `
 		INSERT INTO users (
-			full_name,
-			phone_number,
-			password
-		) VALUES($1, $2, $3)
+			phone_number
+		) VALUES($1)
 		RETURNING id`
 
-	err := r.pg.Pool.QueryRow(ctx, query, req.FullName, req.PhoneNumber, req.Password).Scan(&id)
+	err := r.pg.Pool.QueryRow(ctx, query, req.PhoneNumber).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +88,8 @@ func (r *UserRepo) GetById(ctx context.Context, req *entity.ById) (*entity.UserI
 		id,
 		full_name,
 		phone_number,
+		avatar,
+		role,
 		created_at
 	FROM 
 		users
@@ -104,6 +104,8 @@ func (r *UserRepo) GetById(ctx context.Context, req *entity.ById) (*entity.UserI
 		&res.ID,
 		&res.FullName,
 		&res.PhoneNumber,
+		&res.Avatar,
+		&res.Role,
 		&createdAt,
 	)
 	if err != nil {
@@ -193,6 +195,10 @@ func (r *UserRepo) Update(ctx context.Context, req *entity.UpdateUser) error {
 	if req.PhoneNumber != "" && req.PhoneNumber != "string" {
 		conditions = append(conditions, " phone_number = $"+strconv.Itoa(len(args)+1))
 		args = append(args, req.PhoneNumber)
+	}
+	if req.Avatar != "" && req.Avatar != "string" {
+		conditions = append(conditions, " avatar = $"+strconv.Itoa(len(args)+1))
+		args = append(args, req.Avatar)
 	}
 
 	conditions = append(conditions, " updated_at = CURRENT_TIMESTAMP")
