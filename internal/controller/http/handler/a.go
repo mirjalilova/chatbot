@@ -50,6 +50,13 @@ func (h *Handler) ChatWS(c *gin.Context) {
 		fmt.Println("Old queries:", oldQueries)
 
 		geminiResp := gemini.GetResponse(*h.Config, request, oldQueries, organizations)
+		if geminiResp == nil {
+			_ = conn.WriteJSON(map[string]any{
+				"type":  "error",
+				"error": "Failed to get response from Gemini",
+			})
+			continue
+		}
 
 		go func() {
 			if err := cache.AppendUserQuery(h.Redis, ctx, chatRoomID, geminiResp.EnrichedQuery); err != nil {
@@ -91,7 +98,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 				return
 			}
 		} else {
-			if err := sonar.StreamToWSOneOrg(*h.Config, h.UseCase, *h.Redis,conn, request, geminiResp.EnrichedQuery, chatRoomID); err != nil {
+			if err := sonar.StreamToWSOneOrg(*h.Config, h.UseCase, *h.Redis, conn, request, geminiResp.EnrichedQuery, chatRoomID); err != nil {
 				_ = conn.WriteJSON(map[string]any{
 					"type":  "error",
 					"error": fmt.Sprintf("Sonar error: %v", err),

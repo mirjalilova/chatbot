@@ -53,11 +53,17 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 	// Initialize Casbin enforcer
 
 	engine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5050", "http://localhost:3000", "*"},
+		AllowOrigins: []string{
+			"http://localhost:3000",
+			"http://localhost:5050",
+			"https://ai.center.uz",
+			"https://back-ai.center.uz",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
 	}))
 
 	engine.Use(TimeoutMiddleware(5 * time.Minute))
