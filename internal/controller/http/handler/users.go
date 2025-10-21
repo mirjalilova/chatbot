@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	middleware "chatbot/internal/controller/http/middlerware"
 	"chatbot/internal/controller/http/token"
 	"chatbot/internal/entity"
 	"chatbot/pkg/cache"
@@ -180,7 +179,7 @@ func (h *Handler) Verify(c *gin.Context) {
 		"access_token",
 		tokenStr.AccessToken,
 		3600,
-		"localhost",
+		"",
 		"",
 		false,
 		true,
@@ -211,13 +210,16 @@ func (h *Handler) Verify(c *gin.Context) {
 // @Router /users/profile [get]
 func (h *Handler) GetByIdUser(c *gin.Context) {
 
-	claims, err := middleware.ExtractToken(c.Request)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
-		return
-	}
+	// claims, err := middleware.ExtractToken(c.Request)
+	// if err != nil {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
+	// 	return
+	// }
 
-	userID, ok := claims["id"].(string)
+	setCookieHeader := c.Writer.Header().Get("Set-Cookie")
+	fmt.Println("Set-Cookie header:", setCookieHeader)
+
+	userID, ok := "", false
 	if !ok || userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
 		return
