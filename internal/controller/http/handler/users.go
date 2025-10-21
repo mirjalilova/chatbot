@@ -186,6 +186,8 @@ func (h *Handler) Verify(c *gin.Context) {
 		true,
 	)
 
+	fmt.Println("Generated Access Token:", tokenStr.AccessToken)
+
 	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.PhoneNumber)
 
 	c.JSON(http.StatusOK, gin.H{
