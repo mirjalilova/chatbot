@@ -186,6 +186,9 @@ func (h *Handler) Verify(c *gin.Context) {
 		true,
 	)
 
+	setCookieHeader := c.Writer.Header().Get("Set-Cookie")
+	fmt.Println("Set-Cookie header:", setCookieHeader)
+
 	fmt.Println(tokenStr.AccessToken)
 
 	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.PhoneNumber)
