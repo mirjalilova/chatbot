@@ -186,11 +186,6 @@ func (h *Handler) Verify(c *gin.Context) {
 		true,
 	)
 
-	setCookieHeader := c.Writer.Header().Get("Set-Cookie")
-	fmt.Println("Set-Cookie header:", setCookieHeader)
-
-	fmt.Println(tokenStr.AccessToken)
-
 	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.PhoneNumber)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -216,9 +211,6 @@ func (h *Handler) GetByIdUser(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
 		return
 	}
-
-	setCookieHeader := c.Writer.Header().Get("Set-Cookie")
-	fmt.Println("Set-Cookie header:", setCookieHeader)
 
 	userID, ok := claims["id"].(string)
 	if !ok || userID == "" {
