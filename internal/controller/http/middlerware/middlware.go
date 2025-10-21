@@ -83,20 +83,20 @@ func OptionalAuth() gin.HandlerFunc {
 }
 
 func ExtractToken(r *http.Request) (jwt.MapClaims, error) {
-	jwtToken := r.Header.Get("Authorization")
-	if jwtToken != "" {
-		if strings.Contains(jwtToken, "Basic") {
-			return nil, fmt.Errorf("invalid token format")
-		}
-		tokenString := strings.TrimSpace(strings.TrimPrefix(jwtToken, "Bearer "))
-		return token.ExtractClaim(tokenString)
-	}
+	// jwtToken := r.Header.Get("Authorization")
+	// if jwtToken != "" {
+	// 	if strings.Contains(jwtToken, "Basic") {
+	// 		return nil, fmt.Errorf("invalid token format")
+	// 	}
+	// 	tokenString := strings.TrimSpace(strings.TrimPrefix(jwtToken, "Bearer "))
+	// 	return token.ExtractClaim(tokenString)
+	// }
 
 	cookie, err := r.Cookie("access_token")
-	fmt.Println("Cookie access_token:", cookie, cookie.Value)
 	if err != nil {
 		return nil, fmt.Errorf("access token missing in both header and cookie")
 	}
+	fmt.Println("Cookie access_token:", cookie, cookie.Value)
 
 	return token.ExtractClaim(cookie.Value)
 }
