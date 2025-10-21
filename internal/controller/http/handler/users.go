@@ -182,9 +182,11 @@ func (h *Handler) Verify(c *gin.Context) {
 		3600,
 		"/",
 		"",
-		true,
+		false,
 		true,
 	)
+
+	fmt.Println(tokenStr.AccessToken)
 
 	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.PhoneNumber)
 

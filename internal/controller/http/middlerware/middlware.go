@@ -93,6 +93,7 @@ func ExtractToken(r *http.Request) (jwt.MapClaims, error) {
 	}
 
 	cookie, err := r.Cookie("access_token")
+	fmt.Println("Cookie access_token:", cookie)
 	if err != nil {
 		return nil, fmt.Errorf("access token missing in both header and cookie")
 	}
