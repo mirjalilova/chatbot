@@ -176,16 +176,17 @@ func (h *Handler) Verify(c *gin.Context) {
 
 	tokenStr := token.GenerateJWTToken(user.Id, user.Role)
 
-	c.SetCookie(
-		"access_token",
-		tokenStr.AccessToken,
-		3600,
-		"",
-		"",
-		false,
-		true,
-	)
-
+    cookie := &http.Cookie{
+        Name:     "access_token",
+        Value:    tokenStr.AccessToken,
+        Path:     "/",
+        Domain:   "",          
+        HttpOnly: true,
+        Secure:   false,              
+        SameSite: http.SameSiteNoneMode,
+        MaxAge:   3600,
+    }
+    http.SetCookie(c.Writer, cookie)
 	fmt.Println("Generated Access Token:", tokenStr.AccessToken)
 
 	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.PhoneNumber)
