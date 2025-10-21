@@ -180,7 +180,7 @@ func (h *Handler) Verify(c *gin.Context) {
 		"access_token",
 		tokenStr.AccessToken,
 		3600,
-		"/",
+		"localhost",
 		"",
 		false,
 		true,
