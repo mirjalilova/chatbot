@@ -182,7 +182,7 @@ func (h *Handler) Verify(c *gin.Context) {
         Path:     "/",
         Domain:   "",          
         HttpOnly: true,
-        Secure:   false,              
+        Secure:   true,              
         SameSite: http.SameSiteNoneMode,
         MaxAge:   3600,
     }
