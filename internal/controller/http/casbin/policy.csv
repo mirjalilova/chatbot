@@ -5,6 +5,8 @@ p, unauthorized, /users/login,               GET
 
 p, user, /ask, POST
 
+p, user, /users/profile, GET
+
 p, admin, *, *
 
 g, user, unauthorized
