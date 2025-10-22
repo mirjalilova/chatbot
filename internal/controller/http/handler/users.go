@@ -180,7 +180,7 @@ func (h *Handler) Verify(c *gin.Context) {
         Name:     "access_token",
         Value:    tokenStr.AccessToken,
         Path:     "/",
-        Domain:   "localhost",          
+        Domain:   "ccenter.uz",          
         HttpOnly: true,
         Secure:   true,              
         SameSite: http.SameSiteNoneMode,
