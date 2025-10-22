@@ -258,11 +258,6 @@ paths:
       - application/json
       description: Get chat room by user ID
       parameters:
-      - description: User ID
-        in: query
-        name: id
-        required: true
-        type: string
       - description: Limit
         in: query
         name: limit

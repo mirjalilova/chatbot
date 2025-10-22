@@ -196,13 +196,6 @@ const docTemplate = `{
                 "summary": "Get chat room by user ID",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "description": "Limit",
                         "name": "limit",

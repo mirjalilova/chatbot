@@ -1,9 +1,11 @@
 package handler
 
 import (
+	middleware "chatbot/internal/controller/http/middlerware"
 	"chatbot/internal/entity"
 	"context"
 	"log/slog"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -47,7 +49,6 @@ func (h *Handler) CreateChatRoom(c *gin.Context) {
 // @Tags Chat
 // @Accept  json
 // @Produce  json
-// @Param id query string true "User ID"
 // @Param limit query int false "Limit"
 // @Param offset query int false "Offset"
 // @Success 200 {object} entity.ChatRoomList
@@ -56,6 +57,18 @@ func (h *Handler) CreateChatRoom(c *gin.Context) {
 // @Security BearerAuth
 // @Router /chat/user_id [get]
 func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
+
+	claims, err := middleware.ExtractToken(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
+		return
+	}
+
+	userID, ok := claims["id"].(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
 
 	offset := c.Query("offset")
 	limit := c.Query("limit")
@@ -68,7 +81,7 @@ func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
 	}
 
 	req := &entity.GetChatRoomReq{
-		UserId: c.Query("id"),
+		UserId: userID,
 		Limit:  limitValue,
 		Offset: offsetValue,
 	}
