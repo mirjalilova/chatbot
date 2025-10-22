@@ -100,6 +100,7 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 		// users.POST("/register", handlerV1.Register)
 		users.PUT("/update", handlerV1.UpdateUser)
 		users.DELETE("/delete", handlerV1.DeleteUser)
+		users.POST("/logout", handlerV1.Logout)
 	}
 
 	restrictions := engine.Group("/restrictions")
