@@ -21,6 +21,7 @@ type (
 		Update(ctx context.Context, req *entity.UpdateUser) error
 		Delete(ctx context.Context, req *entity.ById) error
 		GetByPhone(ctx context.Context, phone string) (*entity.GetByPhone, error)
+		GetMe(ctx context.Context, id string) (*entity.GetMe, error)
 	}
 
 	// RestrictionRepo -.

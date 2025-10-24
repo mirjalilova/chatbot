@@ -1,13 +1,12 @@
-p, unauthorized, /,                                GET
+p, unauthorized, /,                          GET
 
 p, unauthorized, /users/login,               GET
 
+p, guest, /users/me,                         GET
+p, guest, /chat/user_id,                     GET
+p, guest, /chat/message,                     GET
 
-p, user, /ask, POST
-
-p, user, /users/profile, GET
-
-p, admin, *, *
+p, user, *, *
 
 g, user, unauthorized
 g, admin, user

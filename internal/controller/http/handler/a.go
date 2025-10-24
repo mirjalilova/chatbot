@@ -43,6 +43,19 @@ func (h *Handler) ChatWS(c *gin.Context) {
 		}
 		request := req.Message
 
+		err = h.UseCase.ChatRepo.Check(ctx, "", chatRoomID)
+		if err != nil {
+			if err.Error() == "kunlik limiti tugadi" || err.Error() == "sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting" {
+				_ = conn.WriteJSON(map[string]any{
+					"type":  "warning",
+					"error": err.Error(),
+				})
+				continue
+			}
+			slog.Error("Check error", "error", err)
+			break
+		}
+
 		oldQueries, err := cache.GetUserQueries(h.Redis, ctx, chatRoomID, int64(5))
 
 		organizations, err := cache.GetChatOrganizations(h.Redis, ctx, "o"+chatRoomID, int64(5))

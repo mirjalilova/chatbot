@@ -204,8 +204,16 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById, limit, 
 }
 
 func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
+	// fmt.Println("chatRoomID", chatRoomID, "userID", userID)
 
-	fmt.Println("chatRoomID", chatRoomID, "userID", userID)
+	if userID == "" {
+		query := `SELECT user_id FROM chat_rooms WHERE id = $1 AND deleted_at = 0`
+		err := r.pg.Pool.QueryRow(ctx, query, chatRoomID).Scan(&userID)
+		if err != nil {
+			return fmt.Errorf("failed to get chat room owner: %w", err)
+		}
+	}
+
 	var role string
 	err := r.pg.Pool.QueryRow(ctx, `
 		SELECT role FROM users WHERE id = $1 AND deleted_at = 0
@@ -222,19 +230,36 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 		return fmt.Errorf("failed to get restrictions: %w", err)
 	}
 
-	var todayRequestCount int
-	err = r.pg.Pool.QueryRow(ctx, `
-		SELECT COUNT(c.id)
-		FROM chat c
-		JOIN chat_rooms cr ON cr.id = c.chat_room_id
-		WHERE cr.user_id = $1 AND c.created_at::date = CURRENT_DATE AND c.deleted_at = 0
-	`, userID).Scan(&todayRequestCount)
-	if err != nil {
-		return fmt.Errorf("failed to count today's requests: %w", err)
-	}
+	var requestCount int
+	if role == "guest" {
+		err = r.pg.Pool.QueryRow(ctx, `
+			SELECT COUNT(c.id)
+			FROM chat c
+			JOIN chat_rooms cr ON cr.id = c.chat_room_id
+			WHERE cr.user_id = $1 AND c.deleted_at = 0
+		`, userID).Scan(&requestCount)
+		if err != nil {
+			return fmt.Errorf("failed to count guest requests: %w", err)
+		}
 
-	if todayRequestCount >= requestLimit {
-		return errors.New("kunlik request limiti tugadi")
+		if requestCount >= requestLimit {
+			return errors.New("sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting")
+		}
+
+	} else {
+		err = r.pg.Pool.QueryRow(ctx, `
+			SELECT COUNT(c.id)
+			FROM chat c
+			JOIN chat_rooms cr ON cr.id = c.chat_room_id
+			WHERE cr.user_id = $1 AND c.created_at::date = CURRENT_DATE AND c.deleted_at = 0
+		`, userID).Scan(&requestCount)
+		if err != nil {
+			return fmt.Errorf("failed to count today's requests: %w", err)
+		}
+
+		if requestCount >= requestLimit {
+			return errors.New("kunlik limiti tugadi")
+		}
 	}
 
 	// var chatRequestCount int

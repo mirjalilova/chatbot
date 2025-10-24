@@ -7,12 +7,20 @@ type CreateUser struct {
 }
 
 type UserInfo struct {
-	ID          string `json:"id"`
+	ID          string  `json:"id"`
 	FullName    *string `json:"full_name"`
-	PhoneNumber string `json:"phone_number"`
-	Role        string `json:"role"`
+	PhoneNumber string  `json:"phone_number"`
+	Role        string  `json:"role"`
 	Avatar      *string `json:"avatar"`
-	CreatedAt   string `json:"created_at"`
+	CreatedAt   string  `json:"created_at"`
+}
+
+type GetMe struct {
+	FullName    *string `json:"full_name"`
+	Role        string  `json:"role"`
+	Avatar      *string `json:"avatar"`
+	Language    string  `json:"language"`
+	LimitIsOver bool    `json:"limit_is_over"`
 }
 
 type UpdateUser struct {

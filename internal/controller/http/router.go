@@ -101,6 +101,7 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 		users.PUT("/update", middleware.NewAuth(enforcer), handlerV1.UpdateUser)
 		users.DELETE("/delete", middleware.NewAuth(enforcer), handlerV1.DeleteUser)
 		users.POST("/logout", middleware.NewAuth(enforcer), handlerV1.Logout)
+		users.GET("/me", middleware.NewAuth(enforcer), handlerV1.GetMe)
 	}
 
 	restrictions := engine.Group("/restrictions")

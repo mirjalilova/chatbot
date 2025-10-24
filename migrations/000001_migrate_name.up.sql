@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone_number VARCHAR(13) UNIQUE NOT NULL,
   role role NOT NULL DEFAULT 'user',
   avatar TEXT,
+  language TEXT NOT NULL DEFAULT 'en',
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   deleted_at BIGINT NOT NULL DEFAULT 0
@@ -45,10 +46,11 @@ CREATE TABLE IF NOT EXISTS chat (
 
 
 
-INSERT INTO restrictions (type, request_limit, character_limit, chat_limit, time_limit) VALUES
-('user', 10000, 100000, 1000000, 0),
-('admin', 0, 0, 0, 0),
-('pro-user', 0, 0, 0, 0);
+INSERT INTO restrictions (type, request_limit, time_limit) VALUES
+('user', 10000, 100000),
+('admin', 0, 0),
+('pro-user', 0, 0),
+('guest', 3, 0);
 
 INSERT INTO users (id, full_name, phone_number, password) VALUES
 ('00000000-0000-0000-0000-000000000000', 'admin', '+998979004416', '$2a$10$hQIviMhEdjuyAAKYsImr6uw9739a96iQNfJhox/lx/7foJzsKR9JW'); -- password is 'adminpassword'

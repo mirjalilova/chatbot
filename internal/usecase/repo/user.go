@@ -260,3 +260,32 @@ func (r *UserRepo) GetByPhone(ctx context.Context, phone string) (*entity.GetByP
 
 	return &res, nil
 }
+
+func (r *UserRepo) GetMe(ctx context.Context, id string) (*entity.GetMe, error) {
+	var res entity.GetMe
+	query := `
+		SELECT
+			full_name,
+			role,
+			avatar,
+			language,
+		FROM
+			users
+		WHERE
+			id = $1
+		AND
+			deleted_at = 0
+	`
+	row := r.pg.Pool.QueryRow(ctx, query, id)
+	err := row.Scan(
+		&res.FullName,
+		&res.Role,
+		&res.Avatar,
+		&res.Language,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}

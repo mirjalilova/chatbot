@@ -176,17 +176,17 @@ func (h *Handler) Verify(c *gin.Context) {
 
 	tokenStr := token.GenerateJWTToken(user.Id, user.Role)
 
-    cookie := &http.Cookie{
-        Name:     "access_token",
-        Value:    tokenStr.AccessToken,
-        Path:     "/",
-        Domain:   "ccenter.uz",          
-        HttpOnly: true,
-        Secure:   true,              
-        SameSite: http.SameSiteNoneMode,
-        MaxAge:   3600,
-    }
-    http.SetCookie(c.Writer, cookie)
+	cookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    tokenStr.AccessToken,
+		Path:     "/",
+		Domain:   "ccenter.uz",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+		MaxAge:   3600,
+	}
+	http.SetCookie(c.Writer, cookie)
 	fmt.Println("Generated Access Token:", tokenStr.AccessToken)
 
 	go cache.DeleteVerificationCode(h.Redis, context.Background(), req.PhoneNumber)
@@ -309,6 +309,53 @@ func (h *Handler) GetAllUsers(c *gin.Context) {
 	}
 
 	slog.Info("Users retrieved successfully")
+	c.JSON(200, res)
+}
+
+// GetMe godoc
+// @Summary Get current user info
+// @Description Get information about the currently authenticated user
+// @Tags Users
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} entity.GetMe
+// @Failure 400 {object} string
+// @Failure 500 {object} string
+// @Security BearerAuth
+// @Router /users/me [get]
+func (h *Handler) GetMe(c *gin.Context) {
+
+	claims, err := middleware.ExtractToken(c.Request)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
+		return
+	}
+
+	userID, ok := claims["id"].(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	res, err := h.UseCase.UserRepo.GetMe(context.Background(), userID)
+	if err != nil {
+		c.JSON(500, gin.H{"Error getting User info: ": err.Error()})
+		slog.Error("Error getting User info: ", "err", err)
+		return
+	}
+	res.LimitIsOver = false
+
+	err = h.UseCase.ChatRepo.Check(context.Background(), userID, "")
+	if err != nil {
+		if err.Error() == "sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting" || err.Error() == "kunlik limiti tugadi" {
+			res.LimitIsOver = true
+		}
+		c.JSON(500, gin.H{"Error checking chat permissions: ": err.Error()})
+		slog.Error("Error checking chat permissions: ", "err", err)
+		return
+	}
+
+	slog.Info("User info retrieved successfully")
 	c.JSON(200, res)
 }
 
