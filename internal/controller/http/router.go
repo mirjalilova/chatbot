@@ -56,7 +56,7 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 		AllowOrigins: []string{
 			"http://localhost:3000",
 			"http://localhost:5050",
-			"https://ai.center.uz",
+			"https://ai-1009.ccenter.uz",
 			"https://back-ai.center.uz",
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
