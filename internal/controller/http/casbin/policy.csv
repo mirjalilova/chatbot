@@ -6,6 +6,17 @@ p, guest, /users/me,                         GET
 p, guest, /chat/user_id,                     GET
 p, guest, /chat/message,                     GET
 
+p, user, /users/me,                         GET
+p, user, /users/profile,                     GET
+p, user, /users/update,                     PUT
+p, user, /users/delete,                         DELETE
+p, user, /users/logout,                     POST
+
+p, user, /chat/room/create,                     POST
+p, user, /chat/room/delete,                         DELETE
+p, user, /chat/user_id,                     GET
+p, user, /chat/message,                     GET
+
 p, user, *, *
 
 g, user, unauthorized
