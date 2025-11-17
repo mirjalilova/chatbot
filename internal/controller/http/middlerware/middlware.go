@@ -122,7 +122,7 @@ func ExtractToken(w http.ResponseWriter, r *http.Request, userRepo usecase.UserR
 	http.SetCookie(w, access)
 
 
-	return token.ExtractClaim(cookie.Value)
+	return token.ExtractClaim(tokens.AccessToken)
 }
 
 
