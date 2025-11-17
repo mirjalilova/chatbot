@@ -97,29 +97,30 @@ func ExtractToken(w http.ResponseWriter, r *http.Request, userRepo usecase.UserR
 	// }
 
     cookie, err := r.Cookie("access_token")
-    if err == nil && cookie.Value != "" {
-        return token.ExtractClaim(cookie.Value)
-    }
+	if err == nil && cookie != nil && cookie.Value != "" {
+		return token.ExtractClaim(cookie.Value)
+	}
 
 	guestID, err := userRepo.CreateGuest(r.Context())
-    if err != nil {
-        return nil, fmt.Errorf("guest user yaratishda xatolik: %w", err)
-    }
+	if err != nil {
+		return nil, fmt.Errorf("error while creating guest user: %w", err)
+	}
 	slog.Info("Created new guest user with ID: %s", guestID)
 
 	tokens := token.GenerateJWTToken(guestID, "guest")
 
 	access := &http.Cookie{
-        Name:     "access_token",
-        Value:    tokens.AccessToken,
-        Path:     "/",
+		Name:     "access_token",
+		Value:    tokens.AccessToken,
+		Path:     "/",
 		Domain:   "ccenter.uz",
-        HttpOnly: true,
-        Secure:   true,
-        SameSite: http.SameSiteNoneMode,
-        Expires:  time.Now().Add(1000 * 24 * time.Hour),
-    }
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+		Expires:  time.Now().Add(1000 * 24 * time.Hour),
+	}
 	http.SetCookie(w, access)
+
 
 	return token.ExtractClaim(cookie.Value)
 }
