@@ -16,6 +16,7 @@ type (
 		// Login(ctx context.Context, req *entity.LoginReq) (*entity.LoginRes, error)
 		CheckExist(ctx context.Context, phone string) (bool, error)
 		Create(ctx context.Context, req *entity.CreateUser) (*entity.UserInfo, error)
+		CreateGuest(ctx context.Context) (string, error)
 		GetById(ctx context.Context, req *entity.ById) (*entity.UserInfo, error)
 		GetAll(ctx context.Context, req *entity.Filter, status string) (*entity.UserList, error)
 		Update(ctx context.Context, req *entity.UpdateUser) error
@@ -38,7 +39,7 @@ type (
 		CreateChatRoom(ctx context.Context, req *entity.ChatRoomCreate) (string, error)
 		GetChatRoomByUserId(ctx context.Context, id *entity.GetChatRoomReq) (*entity.ChatRoomList, error)
 		GetChatRoomChat(ctx context.Context, id *entity.ById, limit, offset int) (*entity.ChatList, error)
-		Check(ctx context.Context, user_id, chatRoomID string) error
+		Check(ctx context.Context, user_id, chatRoomID string) (int, error) 
 		DeleteChatRoom(ctx context.Context, id *entity.ById) error
 	}
 

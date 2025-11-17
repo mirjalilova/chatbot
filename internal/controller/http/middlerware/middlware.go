@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
+
+	"chatbot/internal/controller/http/token"
+	"chatbot/internal/usecase"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"chatbot/internal/controller/http/token"
 	"golang.org/x/exp/slog"
 )
 
@@ -18,9 +21,10 @@ const (
 	unauthorized = "unauthorized"
 )
 
-func NewAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
+
+func NewAuth(enforcer *casbin.Enforcer, userRepo usecase.UserRepoI) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		allow, err := CheckPermission(ctx.FullPath(), ctx.Request, enforcer)
+		allow, err := CheckPermission(ctx.Writer, ctx.FullPath(), ctx.Request, enforcer, userRepo)
 
 		if err != nil {
 			slog.Error("Error checking permission: %v", err)
@@ -37,7 +41,7 @@ func NewAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
 			return
 		}
 
-		claims, err := ExtractToken(ctx.Request)
+		claims, err := ExtractToken(ctx.Writer, ctx.Request, userRepo)
 		if err != nil {
 			slog.Error("Error extracting token: %v", err)
 			InvalidToken(ctx)
@@ -57,11 +61,11 @@ func NewAuth(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	}
 }
 
-func OptionalAuth() gin.HandlerFunc {
+func OptionalAuth(userRepo usecase.UserRepoI) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		jwtToken := ctx.Request.Header.Get("Authorization")
 		if jwtToken != "" {
-			claims, err := ExtractToken(ctx.Request)
+			claims, err := ExtractToken(ctx.Writer, ctx.Request, userRepo)
 			if err != nil {
 				if strings.Contains(err.Error(), "token expired") {
 					slog.Warn("Token expired")
@@ -82,7 +86,7 @@ func OptionalAuth() gin.HandlerFunc {
 	}
 }
 
-func ExtractToken(r *http.Request) (jwt.MapClaims, error) {
+func ExtractToken(w http.ResponseWriter, r *http.Request, userRepo usecase.UserRepoI) (jwt.MapClaims, error) {
 	// jwtToken := r.Header.Get("Authorization")
 	// if jwtToken != "" {
 	// 	if strings.Contains(jwtToken, "Basic") {
@@ -92,18 +96,37 @@ func ExtractToken(r *http.Request) (jwt.MapClaims, error) {
 	// 	return token.ExtractClaim(tokenString)
 	// }
 
-	cookie, err := r.Cookie("access_token")
-	if err != nil {
-		return nil, fmt.Errorf("access token missing in both header and cookie")
-	}
-	fmt.Println("Cookie access_token:", cookie, cookie.Value)
+    cookie, err := r.Cookie("access_token")
+    if err == nil && cookie.Value != "" {
+        return token.ExtractClaim(cookie.Value)
+    }
+
+	guestID, err := userRepo.CreateGuest(r.Context())
+    if err != nil {
+        return nil, fmt.Errorf("guest user yaratishda xatolik: %w", err)
+    }
+	slog.Info("Created new guest user with ID: %s", guestID)
+
+	tokens := token.GenerateJWTToken(guestID, "guest")
+
+	access := &http.Cookie{
+        Name:     "access_token",
+        Value:    tokens.AccessToken,
+        Path:     "/",
+		Domain:   "ccenter.uz",
+        HttpOnly: true,
+        Secure:   true,
+        SameSite: http.SameSiteNoneMode,
+        Expires:  time.Now().Add(1000 * 24 * time.Hour),
+    }
+	http.SetCookie(w, access)
 
 	return token.ExtractClaim(cookie.Value)
 }
 
 
-func GetRole(r *http.Request) (string, error) {
-	claims, err := ExtractToken(r)
+func GetRole(w http.ResponseWriter, r *http.Request, userrepo usecase.UserRepoI) (string, error) {
+	claims, err := ExtractToken(w, r, userrepo)
 	if err != nil {
 		return unauthorized, err
 	}
@@ -115,8 +138,8 @@ func GetRole(r *http.Request) (string, error) {
 	return role, nil
 }
 
-func CheckPermission(path string, r *http.Request, enforcer *casbin.Enforcer) (bool, error) {
-	role, err := GetRole(r)
+func CheckPermission(w http.ResponseWriter, path string, r *http.Request, enforcer *casbin.Enforcer, userrepo usecase.UserRepoI) (bool, error) {
+	role, err := GetRole(w, r, userrepo)
 	if err != nil {
 		slog.Error("Error getting role from token", err)
 		return false, err

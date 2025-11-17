@@ -43,7 +43,7 @@ func (h *Handler) ChatWS(c *gin.Context) {
 		}
 		request := req.Message
 
-		err = h.UseCase.ChatRepo.Check(ctx, "", chatRoomID)
+		_, err = h.UseCase.ChatRepo.Check(ctx, "", chatRoomID)
 		if err != nil {
 			if err.Error() == "kunlik limiti tugadi" || err.Error() == "sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting" {
 				_ = conn.WriteJSON(map[string]any{
@@ -57,8 +57,32 @@ func (h *Handler) ChatWS(c *gin.Context) {
 		}
 
 		oldQueries, err := cache.GetUserQueries(h.Redis, ctx, chatRoomID, int64(5))
+		if err != nil {
+			err = conn.WriteJSON(map[string]any{
+						"type":  "error",
+						"message": err.Error(),
+					})
+					if err != nil {
+						slog.Warn("Failed to get old queries", "error", err)
+						break
+					}
+				return
+		}
+
 
 		organizations, err := cache.GetChatOrganizations(h.Redis, ctx, "o"+chatRoomID, int64(5))
+		if err != nil {
+			err = conn.WriteJSON(map[string]any{
+						"type":  "error",
+						"message": err.Error(),
+					})
+					if err != nil {
+						slog.Warn("Failed to get organizations", "error", err)
+						break
+					}
+				return
+		}
+
 
 		fmt.Println("Old queries:", oldQueries)
 
@@ -91,6 +115,30 @@ func (h *Handler) ChatWS(c *gin.Context) {
 				slog.Error("Write message error", "error", err)
 				break
 			}
+
+			remaining, err := h.UseCase.ChatRepo.Check(context.Background(), "", chatRoomID)
+			if err != nil {
+				if err.Error() == "sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting" || err.Error() == "kunlik limiti tugadi" {
+					err = conn.WriteJSON(map[string]any{
+						"limit": remaining,
+						"message": err.Error(),
+					})
+					if err != nil {
+						slog.Warn("Failed to send limit message", "error", err)
+						break
+					}
+				}
+				err = conn.WriteJSON(map[string]any{
+						"type":  "error",
+						"message": err.Error(),
+					})
+					if err != nil {
+						slog.Warn("Failed to get limit", "error", err)
+						break
+					}
+				return
+			}
+
 			err = conn.WriteJSON(map[string]any{
 				"status": "end",
 			})

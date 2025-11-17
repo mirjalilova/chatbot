@@ -92,6 +92,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
+
 	if !isValidPhone(reqBody.PhoneNumber) {
 		c.JSON(409, gin.H{"message": "Incorrect phone number format"})
 		slog.Error("Incorrect phone number format")
@@ -209,7 +210,7 @@ func (h *Handler) Verify(c *gin.Context) {
 // @Router /users/profile [get]
 func (h *Handler) GetByIdUser(c *gin.Context) {
 
-	claims, err := middleware.ExtractToken(c.Request)
+	claims, err := middleware.ExtractToken(c.Writer, c.Request, h.UseCase.UserRepo)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
 		return
@@ -325,7 +326,7 @@ func (h *Handler) GetAllUsers(c *gin.Context) {
 // @Router /users/me [get]
 func (h *Handler) GetMe(c *gin.Context) {
 
-	claims, err := middleware.ExtractToken(c.Request)
+	claims, err := middleware.ExtractToken(c.Writer, c.Request, h.UseCase.UserRepo)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
 		return
@@ -343,12 +344,11 @@ func (h *Handler) GetMe(c *gin.Context) {
 		slog.Error("Error getting User info: ", "err", err)
 		return
 	}
-	res.LimitIsOver = false
 
-	err = h.UseCase.ChatRepo.Check(context.Background(), userID, "")
+	remaining, err := h.UseCase.ChatRepo.Check(context.Background(), userID, "")
 	if err != nil {
 		if err.Error() == "sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting" || err.Error() == "kunlik limiti tugadi" {
-			res.LimitIsOver = true
+			res.Limit = remaining
 		}
 		c.JSON(500, gin.H{"Error checking chat permissions: ": err.Error()})
 		slog.Error("Error checking chat permissions: ", "err", err)

@@ -18,7 +18,7 @@ import (
 // @Produce  json
 // @Param user body entity.ChatRoomCreate true "Chat Details"
 // @Success 200 {object} string
-// @Failure 400 {object}  string
+// @Failure 400 {object}  string                                                                                                                                       
 // @Failure 500 {object} string
 // @Security BearerAuth
 // @Router /chat/room/create [post]
@@ -58,7 +58,7 @@ func (h *Handler) CreateChatRoom(c *gin.Context) {
 // @Router /chat/user_id [get]
 func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
 
-	claims, err := middleware.ExtractToken(c.Request)
+	claims, err := middleware.ExtractToken(c.Writer, c.Request, h.UseCase.UserRepo)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
 		return

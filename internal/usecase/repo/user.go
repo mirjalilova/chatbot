@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -44,6 +45,41 @@ func (r *UserRepo) Create(ctx context.Context, req *entity.CreateUser) (*entity.
 		ID: id,
 	}, nil
 }
+
+func (r *UserRepo) CreateGuest(ctx context.Context) (string, error) {
+	tx, err := r.pg.Pool.Begin(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var userID string
+	err = tx.QueryRow(ctx, `
+		INSERT INTO users (role)
+		VALUES ('guest')
+		RETURNING id
+	`).Scan(&userID)
+	if err != nil {
+		return "", fmt.Errorf("failed to create guest: %w", err)
+	}
+
+	var chatRoomID string
+	err = tx.QueryRow(ctx, `
+		INSERT INTO chat_rooms (user_id)
+		VALUES ($1)
+		RETURNING id
+	`, userID).Scan(&chatRoomID)
+	if err != nil {
+		return "", fmt.Errorf("failed to create chat room: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return "", fmt.Errorf("failed to commit tx: %w", err)
+	}
+
+	return userID, nil
+}
+
 
 // func (r *UserRepo) Login(ctx context.Context, req *entity.LoginReq) (*entity.LoginRes, error) {
 // 	query := `

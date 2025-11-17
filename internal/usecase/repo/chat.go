@@ -203,14 +203,14 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById, limit, 
 	return &result, nil
 }
 
-func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
+func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) (int, error) {                                            
 	// fmt.Println("chatRoomID", chatRoomID, "userID", userID)
 
 	if userID == "" {
 		query := `SELECT user_id FROM chat_rooms WHERE id = $1 AND deleted_at = 0`
 		err := r.pg.Pool.QueryRow(ctx, query, chatRoomID).Scan(&userID)
 		if err != nil {
-			return fmt.Errorf("failed to get chat room owner: %w", err)
+			return 0, fmt.Errorf("failed to get chat room owner: %w", err)
 		}
 	}
 
@@ -219,7 +219,7 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 		SELECT role FROM users WHERE id = $1 AND deleted_at = 0
 	`, userID).Scan(&role)
 	if err != nil {
-		return fmt.Errorf("failed to get user role: %w", err)
+		return 0, fmt.Errorf("failed to get user role: %w", err)
 	}
 
 	var requestLimit int
@@ -227,7 +227,7 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 		SELECT request_limit FROM restrictions WHERE type = $1
 	`, role).Scan(&requestLimit)
 	if err != nil {
-		return fmt.Errorf("failed to get restrictions: %w", err)
+		return 0, fmt.Errorf("failed to get restrictions: %w", err)
 	}
 
 	var requestCount int
@@ -239,12 +239,15 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 			WHERE cr.user_id = $1 AND c.deleted_at = 0
 		`, userID).Scan(&requestCount)
 		if err != nil {
-			return fmt.Errorf("failed to count guest requests: %w", err)
+			return 0, fmt.Errorf("failed to count guest requests: %w", err)
+		}
+		remaining := requestLimit - requestCount
+
+		if remaining <= 0 {
+			return 0, errors.New("sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting")
 		}
 
-		if requestCount >= requestLimit {
-			return errors.New("sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting")
-		}
+		return remaining, nil
 
 	} else {
 		err = r.pg.Pool.QueryRow(ctx, `
@@ -254,12 +257,14 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 			WHERE cr.user_id = $1 AND c.created_at::date = CURRENT_DATE AND c.deleted_at = 0
 		`, userID).Scan(&requestCount)
 		if err != nil {
-			return fmt.Errorf("failed to count today's requests: %w", err)
+			return 0, fmt.Errorf("failed to count today's requests: %w", err)
+		}
+		remaining := requestLimit - requestCount
+
+		if remaining <= 0 {
+			return 0, errors.New("kunlik limiti tugadi")
 		}
 
-		if requestCount >= requestLimit {
-			return errors.New("kunlik limiti tugadi")
-		}
 	}
 
 	// var chatRequestCount int
@@ -275,7 +280,7 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) error {
 	// 	return errors.New("bu chatdagi savollar limiti tugagan, yangi chat yarating")
 	// }
 
-	return nil
+	return 0, nil
 }
 
 func (r *ChatRepo) DeleteChatRoom(ctx context.Context, id *entity.ById) error {

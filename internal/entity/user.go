@@ -16,11 +16,11 @@ type UserInfo struct {
 }
 
 type GetMe struct {
-	FullName    *string `json:"full_name"`
-	Role        string  `json:"role"`
-	Avatar      *string `json:"avatar"`
-	Language    string  `json:"language"`
-	LimitIsOver bool    `json:"limit_is_over"`
+	FullName *string `json:"full_name"`
+	Role     string  `json:"role"`
+	Avatar   *string `json:"avatar"`
+	Language string  `json:"language"`
+	Limit    int     `json:"limit"`
 }
 
 type UpdateUser struct {

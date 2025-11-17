@@ -70,6 +70,19 @@ definitions:
       text:
         type: string
     type: object
+  entity.GetMe:
+    properties:
+      avatar:
+        type: string
+      full_name:
+        type: string
+      language:
+        type: string
+      limit:
+        type: integer
+      role:
+        type: string
+    type: object
   entity.LoginReq:
     properties:
       phone_number:
@@ -492,6 +505,31 @@ paths:
           schema:
             type: string
       summary: User logout
+      tags:
+      - Users
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get information about the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.GetMe'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get current user info
       tags:
       - Users
   /users/profile:
