@@ -9,7 +9,7 @@ type CreateUser struct {
 type UserInfo struct {
 	ID          string  `json:"id"`
 	FullName    *string `json:"full_name"`
-	PhoneNumber string  `json:"phone_number"`
+	PhoneNumber *string  `json:"phone_number"`
 	Role        string  `json:"role"`
 	Avatar      *string `json:"avatar"`
 	CreatedAt   string  `json:"created_at"`
