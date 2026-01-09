@@ -391,8 +391,16 @@ func (h *Handler) DeleteUser(c *gin.Context) {
 // @Success 200 {object} string
 // @Router /users/logout [post]
 func (h *Handler) Logout(c *gin.Context) {
+	c.SetCookie(
+		"access_token",
+		"",
+		-1,
+		"/",
+		"ccenter.uz",
+		true,
+		true,
+	)
 
-	c.SetCookie("access_token", "", -1, "/", "", true, true)
 	c.JSON(200, gin.H{"message": "Logged out successfully"})
 }
 
