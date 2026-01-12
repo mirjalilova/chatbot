@@ -351,7 +351,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 			res.Limit = remaining
 		}
 		c.JSON(500, gin.H{"Error checking chat permissions: ": err.Error()})
-		slog.Error("Error checking chat permissions: ", "err", err)
+		slog.Error("Error checking chat permissions: ", "err", err.Error())
 		return
 	}
 

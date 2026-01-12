@@ -40,7 +40,7 @@ func GetResponse(cfg config.Config, userQuestion string, oldQueries []string, or
 		historyContext = strings.Join(lastFive, "\n- ")
 	}
 
-	model := client.GenerativeModel("models/gemini-2.5-pro")
+	model := client.GenerativeModel("gemini-1.5-flash")
 	advice := model.StartChat()
 
 	prompt := fmt.Sprintf(`

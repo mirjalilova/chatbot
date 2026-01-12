@@ -304,7 +304,7 @@ func (r *UserRepo) GetMe(ctx context.Context, id string) (*entity.GetMe, error) 
 			full_name,
 			role,
 			avatar,
-			language,
+			language
 		FROM
 			users
 		WHERE
