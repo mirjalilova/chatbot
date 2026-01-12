@@ -24,7 +24,7 @@ func OrganizationCreate(cfg config.Config, r redis.Client, sonarResp string, org
 	}
 	defer client.Close()
 
-	model := client.GenerativeModel("gemini-1.5-flash")
+	model := client.GenerativeModel("models/gemini-2.5-flash")
 	advice := model.StartChat()
 
 	prompt := fmt.Sprintf(`

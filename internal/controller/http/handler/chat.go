@@ -16,19 +16,26 @@ import (
 // @Tags Chat
 // @Accept  json
 // @Produce  json
-// @Param user body entity.ChatRoomCreate true "Chat Details"
 // @Success 200 {object} string
-// @Failure 400 {object}  string                                                                                                                                       
+// @Failure 400 {object}  string
 // @Failure 500 {object} string
 // @Security BearerAuth
 // @Router /chat/room/create [post]
 func (h *Handler) CreateChatRoom(c *gin.Context) {
-	reqBody := entity.ChatRoomCreate{}
-	err := c.BindJSON(&reqBody)
+	claims, err := middleware.ExtractToken(c.Writer, c.Request, h.UseCase.UserRepo)
 	if err != nil {
-		c.JSON(400, gin.H{"Error binding request body": err.Error()})
-		slog.Error("Error binding request body: ", "err", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
 		return
+	}
+
+	userID, ok := claims["id"].(string)
+	if !ok || userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
+		return
+	}
+
+	reqBody := entity.ChatRoomCreate{
+		UserId: userID,
 	}
 
 	id, err := h.UseCase.ChatRepo.CreateChatRoom(context.Background(), &reqBody)

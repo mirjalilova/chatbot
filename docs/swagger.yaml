@@ -33,13 +33,6 @@ definitions:
       title:
         type: string
     type: object
-  entity.ChatRoomCreate:
-    properties:
-      user_id:
-        type: string
-    required:
-    - user_id
-    type: object
   entity.ChatRoomList:
     properties:
       chat_rooms:
@@ -207,13 +200,6 @@ paths:
       consumes:
       - application/json
       description: Create a new chat room with the user id
-      parameters:
-      - description: Chat Details
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/entity.ChatRoomCreate'
       produces:
       - application/json
       responses:

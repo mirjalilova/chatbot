@@ -94,17 +94,6 @@ const docTemplate = `{
                     "Chat"
                 ],
                 "summary": "Create a new chat room",
-                "parameters": [
-                    {
-                        "description": "Chat Details",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.ChatRoomCreate"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -814,17 +803,6 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.ChatRoomCreate": {
-            "type": "object",
-            "required": [
-                "user_id"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
         "entity.ChatRoomList": {
             "type": "object",
             "properties": {
@@ -1025,6 +1003,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "This is a sample server Chatbot server.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {
