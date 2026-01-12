@@ -5,7 +5,6 @@ p, unauthorized, /users/login,               GET
 p, guest, /users/me,                         GET
 p, guest, /chat/user_id,                     GET
 p, guest, /chat/message,                     GET
-p, guest, /users/profile,                    GET
 p, guest, /users/me,                         GET
 
 p, user, /users/me,                          GET
