@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
   role role NOT NULL DEFAULT 'user',
   avatar TEXT,
   language TEXT NOT NULL DEFAULT 'en',
+  ip_address VARCHAR(50),
+  user_agent TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
   deleted_at BIGINT NOT NULL DEFAULT 0

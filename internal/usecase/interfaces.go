@@ -16,7 +16,8 @@ type (
 		// Login(ctx context.Context, req *entity.LoginReq) (*entity.LoginRes, error)
 		CheckExist(ctx context.Context, phone string) (bool, error)
 		Create(ctx context.Context, req *entity.CreateUser) (*entity.UserInfo, error)
-		CreateGuest(ctx context.Context) (string, error)
+		CreateGuest(ctx context.Context,ip, ua string) (string, error)
+		GetGuestByIPAndUA(ctx context.Context, ip, ua string) (string, error)
 		GetById(ctx context.Context, req *entity.ById) (*entity.UserInfo, error)
 		GetAll(ctx context.Context, req *entity.Filter, status string) (*entity.UserList, error)
 		Update(ctx context.Context, req *entity.UpdateUser) error

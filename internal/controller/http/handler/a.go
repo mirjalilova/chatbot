@@ -116,29 +116,6 @@ func (h *Handler) ChatWS(c *gin.Context) {
 				break
 			}
 
-			remaining, err := h.UseCase.ChatRepo.Check(context.Background(), "", chatRoomID)
-			if err != nil {
-				if err.Error() == "sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting" || err.Error() == "kunlik limiti tugadi" {
-					err = conn.WriteJSON(map[string]any{
-						"limit": remaining,
-						"message": err.Error(),
-					})
-					if err != nil {
-						slog.Warn("Failed to send limit message", "error", err)
-						break
-					}
-				}
-				err = conn.WriteJSON(map[string]any{
-						"type":  "error",
-						"message": err.Error(),
-					})
-					if err != nil {
-						slog.Warn("Failed to get limit", "error", err)
-						break
-					}
-				return
-			}
-
 			err = conn.WriteJSON(map[string]any{
 				"status": "end",
 			})

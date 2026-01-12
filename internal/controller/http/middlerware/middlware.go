@@ -87,25 +87,25 @@ func OptionalAuth(userRepo usecase.UserRepoI) gin.HandlerFunc {
 }
 
 func ExtractToken(w http.ResponseWriter, r *http.Request, userRepo usecase.UserRepoI) (jwt.MapClaims, error) {
-	// jwtToken := r.Header.Get("Authorization")
-	// if jwtToken != "" {
-	// 	if strings.Contains(jwtToken, "Basic") {
-	// 		return nil, fmt.Errorf("invalid token format")
-	// 	}
-	// 	tokenString := strings.TrimSpace(strings.TrimPrefix(jwtToken, "Bearer "))
-	// 	return token.ExtractClaim(tokenString)
-	// }
-
-    cookie, err := r.Cookie("access_token")
+	// 1️⃣ Avval cookie tekshiramiz
+	cookie, err := r.Cookie("access_token")
 	if err == nil && cookie != nil && cookie.Value != "" {
 		return token.ExtractClaim(cookie.Value)
 	}
 
-	guestID, err := userRepo.CreateGuest(r.Context())
+	ip := r.RemoteAddr
+	ua := r.UserAgent()
+
+	guestID, err := userRepo.GetGuestByIPAndUA(r.Context(), ip, ua)
 	if err != nil {
-		return nil, fmt.Errorf("error while creating guest user: %w", err)
+		guestID, err = userRepo.CreateGuest(r.Context(), ip, ua)
+		if err != nil {
+			return nil, fmt.Errorf("error while creating guest user: %w", err)
+		}
+		slog.Info("Created new guest user with ID: %s", guestID)
+	} else {
+		slog.Info("Existing guest user found with ID: %s", guestID)
 	}
-	slog.Info("Created new guest user with ID: %s", guestID)
 
 	tokens := token.GenerateJWTToken(guestID, "guest")
 
@@ -120,7 +120,6 @@ func ExtractToken(w http.ResponseWriter, r *http.Request, userRepo usecase.UserR
 		Expires:  time.Now().Add(1000 * 24 * time.Hour),
 	}
 	http.SetCookie(w, access)
-
 
 	return token.ExtractClaim(tokens.AccessToken)
 }

@@ -46,7 +46,19 @@ func (r *UserRepo) Create(ctx context.Context, req *entity.CreateUser) (*entity.
 	}, nil
 }
 
-func (r *UserRepo) CreateGuest(ctx context.Context) (string, error) {
+func (r *UserRepo) GetGuestByIPAndUA(ctx context.Context, ip, ua string) (string, error) {
+	var id string
+	err := r.pg.Pool.QueryRow(ctx,
+		`SELECT id FROM users WHERE ip_address=$1 AND user_agent=$2`,
+		ip, ua).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+
+func (r *UserRepo) CreateGuest(ctx context.Context, ip, ua string) (string, error) {
 	tx, err := r.pg.Pool.Begin(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to begin tx: %w", err)
@@ -55,10 +67,10 @@ func (r *UserRepo) CreateGuest(ctx context.Context) (string, error) {
 
 	var userID string
 	err = tx.QueryRow(ctx, `
-		INSERT INTO users (role)
-		VALUES ('guest')
+		INSERT INTO users (role, ip_address, user_agent)
+		VALUES ('guest', $1, $2)
 		RETURNING id
-	`).Scan(&userID)
+	`, ip, ua).Scan(&userID)
 	if err != nil {
 		return "", fmt.Errorf("failed to create guest: %w", err)
 	}
