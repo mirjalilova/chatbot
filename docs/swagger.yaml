@@ -289,6 +289,30 @@ paths:
       summary: Get chat room by user ID
       tags:
       - Chat
+  /img-upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: File upload
+      parameters:
+      - description: File
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: File upload
+      tags:
+      - Img-upload
   /restrictions/get:
     get:
       consumes:

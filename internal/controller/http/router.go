@@ -23,6 +23,7 @@ import (
 
 	// middleware "chatbot/internal/controller/http/middlerware"
 	"chatbot/internal/usecase"
+	"chatbot/pkg/minio"
 )
 
 func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
@@ -44,12 +45,12 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCase, gemini_client *genai.Client, rdb *redis.Client) {
+func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCase, gemini_client *genai.Client, rdb *redis.Client, minioClient *minio.Client) {
 	// Options
 	engine.Use(gin.Logger())
 	// engine.Use(gin.Recovery())
 
-	handlerV1 := handler.NewHandler(config, useCase, gemini_client, rdb)
+	handlerV1 := handler.NewHandler(config, useCase, gemini_client, rdb, *minioClient)
 	// Initialize Casbin enforcer
 
 	engine.Use(cors.New(cors.Config{

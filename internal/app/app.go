@@ -20,6 +20,7 @@ import (
 	"chatbot/internal/usecase"
 
 	"chatbot/pkg/httpserver"
+	"chatbot/pkg/minio"
 	"chatbot/pkg/postgres"
 )
 
@@ -81,9 +82,17 @@ func Run(cfg *config.Config) {
 		DB:       0,
 	})
 
+	//MinIO
+	minioClient, err := minio.MinIOConnect(cfg)
+	if err != nil {
+		slog.Error("Failed to connect to MinIO", "err", err)
+		return
+	}
+
+
 	// HTTP Server
 	handler := gin.New()
-	v1.NewRouter(handler, cfg, useCase, gemini_client, rdb)
+	v1.NewRouter(handler, cfg, useCase, gemini_client, rdb, minioClient)
 
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
