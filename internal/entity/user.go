@@ -28,11 +28,14 @@ type UpdateUser struct {
 	FullName    string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`
 	Avatar      string `json:"avatar"`
+	Language string  `json:"language"`
 }
 
 type UpdateUserBody struct {
 	FullName    string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`
+	Avatar      string `json:"avatar"`
+	Language string  `json:"language"`
 }
 
 type UserList struct {

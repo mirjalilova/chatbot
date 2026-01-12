@@ -260,6 +260,8 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		Id:          c.Query("id"),
 		FullName:    reqBody.FullName,
 		PhoneNumber: reqBody.PhoneNumber,
+		Avatar: reqBody.Avatar,
+		Language: reqBody.Language,
 	})
 	if err != nil {
 		c.JSON(500, gin.H{"Error updating User:": err.Error()})

@@ -927,7 +927,13 @@ const docTemplate = `{
         "entity.UpdateUserBody": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "full_name": {
+                    "type": "string"
+                },
+                "language": {
                     "type": "string"
                 },
                 "phone_number": {

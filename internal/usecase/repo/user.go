@@ -248,6 +248,10 @@ func (r *UserRepo) Update(ctx context.Context, req *entity.UpdateUser) error {
 		conditions = append(conditions, " avatar = $"+strconv.Itoa(len(args)+1))
 		args = append(args, req.Avatar)
 	}
+	if req.Language != "" && req.Language != "string" {
+		conditions = append(conditions, " language = $"+strconv.Itoa(len(args)+1))
+		args = append(args, req.Language)
+	}
 
 	conditions = append(conditions, " updated_at = CURRENT_TIMESTAMP")
 	query += strings.Join(conditions, ", ")
