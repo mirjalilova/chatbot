@@ -18,16 +18,12 @@ type MinIO struct {
 	Cnf    *config.Config
 }
 
-var bucketName = "ptest"
+var bucketName = "ai1009"
 
 func MinIOConnect(cnf *config.Config) (*MinIO, error) {
-	endpoint := "31.187.74.228:9000"
-	accessKeyID := "minioadmin"
-	secretAccessKey := "minioadmin123"
-
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: false,
+	minioClient, err := minio.New(cnf.MINIO_ENDPOINT, &minio.Options{
+		Creds:  credentials.NewStaticV4(cnf.MINIO_ACCESS_KEY, cnf.MINIO_SECRET_KEY, ""),
+		Secure: true,
 	})
 	if err != nil {
 		slog.Error("Failed to connect to MinIO: %v", err)
@@ -86,11 +82,9 @@ func (m *MinIO) Upload(fileName, filePath string) (string, error) {
 		return "", err
 	}
 
-	// serverHost := "minio"
-	// domain := "31.187.74.228"
-	// minioURL := fmt.Sprintf("http://%s:%d/%s/%s", "31.187.74.228", 9000, bucketName, fileName)
-
-	minioURL := fmt.Sprintf("https://documents.uz-dev-ai.uz/%s/%s", bucketName, fileName)
+	serverHost := "minio"
+	domain := "ccenter.uz"
+	minioURL := fmt.Sprintf("https://%s.%s/%s/%s", serverHost, domain, bucketName, fileName)
 
 
 	return minioURL, nil

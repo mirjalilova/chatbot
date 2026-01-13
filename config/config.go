@@ -17,6 +17,7 @@ type (
 		JWT              `yaml:"jwt"`
 		PerplexityAPIKey `yaml:"perplexity_api_key"`
 		SMS_TOKEN        `yaml:"sms_token"`
+		Minio  `yaml:"minio"`
 		// OpenAI `yaml:"openai"`
 	}
 
@@ -60,6 +61,15 @@ type (
 	// SMS_TOKEN -.
 	SMS_TOKEN struct {
 		Token string `env-required:"true" yaml:"token" env:"SMS_TOKEN"`
+	}
+
+	
+	// Minio -.
+	Minio struct {
+		MINIO_ENDPOINT    string `env-required:"true" yaml:"MINIO_ENDPOINT" env:"MINIO_ENDPOINT"`
+		MINIO_ACCESS_KEY  string `env-required:"true" yaml:"MINIO_ACCESS_KEY" env:"MINIO_ACCESS_KEY"`
+		MINIO_SECRET_KEY  string `env-required:"true" yaml:"MINIO_SECRET_KEY" env:"MINIO_SECRET_KEY"`
+		MINIO_BUCKET_NAME string `env-required:"true" yaml:"MINIO_BUCKET_NAME" env:"MINIO_BUCKET_NAME"`
 	}
 	
 	// // OpenAI -.

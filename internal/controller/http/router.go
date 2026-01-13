@@ -45,7 +45,7 @@ func TimeoutMiddleware(timeout time.Duration) gin.HandlerFunc {
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCase, gemini_client *genai.Client, rdb *redis.Client, minioClient *minio.Client) {
+func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCase, gemini_client *genai.Client, rdb *redis.Client, minioClient *minio.MinIO) {
 	// Options
 	engine.Use(gin.Logger())
 	// engine.Use(gin.Recovery())
@@ -91,6 +91,8 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 
 	// engine.GET("/responce/list", handlerV1.GetAllChats)
 	// engine.POST("/chats/accept", handlerV1.AcceptResponse)
+
+	engine.POST("/img-upload", handlerV1.UploadFile)
 
 	users := engine.Group("/users")
 	{
