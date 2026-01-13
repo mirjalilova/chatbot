@@ -23,7 +23,7 @@ var bucketName = "ai1009"
 func MinIOConnect(cnf *config.Config) (*MinIO, error) {
 	minioClient, err := minio.New(cnf.MINIO_ENDPOINT, &minio.Options{
 		Creds:  credentials.NewStaticV4(cnf.MINIO_ACCESS_KEY, cnf.MINIO_SECRET_KEY, ""),
-		Secure: true,
+		Secure: false,
 	})
 	if err != nil {
 		slog.Error("Failed to connect to MinIO: %v", err)
@@ -82,10 +82,11 @@ func (m *MinIO) Upload(fileName, filePath string) (string, error) {
 		return "", err
 	}
 
-	serverHost := "minio"
-	domain := "ccenter.uz"
-	minioURL := fmt.Sprintf("https://%s.%s/%s/%s", serverHost, domain, bucketName, fileName)
-
+	minioURL := fmt.Sprintf(
+		"http://localhost:9000/%s/%s",
+		bucketName,
+		fileName,
+	)
 
 	return minioURL, nil
 }
