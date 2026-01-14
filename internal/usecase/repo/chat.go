@@ -203,8 +203,7 @@ func (r *ChatRepo) GetChatRoomChat(ctx context.Context, id *entity.ById, limit, 
 	return &result, nil
 }
 
-func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) (int, error) {                                            
-	// fmt.Println("chatRoomID", chatRoomID, "userID", userID)
+func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) (int, error) {
 
 	if userID == "" {
 		query := `SELECT user_id FROM chat_rooms WHERE id = $1 AND deleted_at = 0`
@@ -231,6 +230,7 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) (int, e
 	}
 
 	var requestCount int
+
 	if role == "guest" {
 		err = r.pg.Pool.QueryRow(ctx, `
 			SELECT COUNT(c.id)
@@ -241,46 +241,31 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) (int, e
 		if err != nil {
 			return 0, fmt.Errorf("failed to count guest requests: %w", err)
 		}
-		remaining := requestLimit - requestCount
-
-		if remaining <= 0 {
-			return 0, errors.New("sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting")
-		}
-
-		return remaining, nil
 
 	} else {
 		err = r.pg.Pool.QueryRow(ctx, `
 			SELECT COUNT(c.id)
 			FROM chat c
 			JOIN chat_rooms cr ON cr.id = c.chat_room_id
-			WHERE cr.user_id = $1 AND c.created_at::date = CURRENT_DATE AND c.deleted_at = 0
+			WHERE cr.user_id = $1
+			  AND c.created_at::date = CURRENT_DATE
+			  AND c.deleted_at = 0
 		`, userID).Scan(&requestCount)
 		if err != nil {
 			return 0, fmt.Errorf("failed to count today's requests: %w", err)
 		}
-		remaining := requestLimit - requestCount
-
-		if remaining <= 0 {
-			return 0, errors.New("kunlik limiti tugadi")
-		}
-
 	}
 
-	// var chatRequestCount int
-	// err = r.pg.Pool.QueryRow(ctx, `
-	// 	SELECT COUNT(id) FROM chat
-	// 	WHERE chat_room_id = $1 AND deleted_at = 0
-	// `, chatRoomID).Scan(&chatRequestCount)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to count chat room requests: %w", err)
-	// }
+	remaining := requestLimit - requestCount
 
-	// if chatRequestCount >= chatLimit {
-	// 	return errors.New("bu chatdagi savollar limiti tugagan, yangi chat yarating")
-	// }
+	if remaining <= 0 {
+		if role == "guest" {
+			return 0, errors.New("sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting")
+		}
+		return 0, errors.New("kunlik limit tugadi")
+	}
 
-	return 0, nil
+	return remaining, nil
 }
 
 func (r *ChatRepo) DeleteChatRoom(ctx context.Context, id *entity.ById) error {

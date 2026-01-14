@@ -83,7 +83,7 @@ func (m *MinIO) Upload(fileName, filePath string) (string, error) {
 	}
 
 	minioURL := fmt.Sprintf(
-		"http://localhost:9000/%s/%s",
+		"http://167.172.35.208 :9000/%s/%s",
 		bucketName,
 		fileName,
 	)

@@ -71,7 +71,7 @@ services:
     networks:
       - chatbot_ntwrk
   
-    minio:
+  minio:
     image: minio/minio:latest
     container_name: minio
     command: server /data --console-address ":9001"
@@ -94,5 +94,7 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  minio_data:
     driver: local
 
