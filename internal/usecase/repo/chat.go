@@ -265,6 +265,8 @@ func (r *ChatRepo) Check(ctx context.Context, userID, chatRoomID string) (int, e
 		return 0, errors.New("kunlik limit tugadi")
 	}
 
+	fmt.Println("id ", userID, "chatRoomID ", chatRoomID, "role ", role, "requestLimit ", requestLimit, "requestCount ", requestCount, "remaining ", remaining)
+
 	return remaining, nil
 }
 

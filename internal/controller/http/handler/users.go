@@ -348,6 +348,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 	}
 
 	remaining, err := h.UseCase.ChatRepo.Check(context.Background(), userID, "")
+	res.Limit = remaining
 	if err != nil {
 		if err.Error() == "sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting" || err.Error() == "kunlik limiti tugadi" {
 			res.Limit = remaining
