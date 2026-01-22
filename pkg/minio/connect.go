@@ -6,10 +6,9 @@ import (
 	"mime"
 	"path/filepath"
 
-	"chatbot/config"
-
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"chatbot/config"
 	"golang.org/x/exp/slog"
 )
 
@@ -21,27 +20,26 @@ type MinIO struct {
 var bucketName = "ai1009"
 
 func MinIOConnect(cnf *config.Config) (*MinIO, error) {
+
 	minioClient, err := minio.New(cnf.MINIO_ENDPOINT, &minio.Options{
 		Creds:  credentials.NewStaticV4(cnf.MINIO_ACCESS_KEY, cnf.MINIO_SECRET_KEY, ""),
-		Secure: false,
+		Secure: true,
 	})
 	if err != nil {
 		slog.Error("Failed to connect to MinIO: %v", err)
 		return nil, err
 	}
 
-	// Create the bucket if it doesn't exist
-	err = minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
+	err = minioClient.MakeBucket(context.Background(), cnf.MINIO_BUCKET_NAME, minio.MakeBucketOptions{})
 	if err != nil {
-		// Check if the bucket already exists
-		exists, errBucketExists := minioClient.BucketExists(context.Background(), bucketName)
+		exists, errBucketExists := minioClient.BucketExists(context.Background(), cnf.MINIO_BUCKET_NAME)
 		if errBucketExists == nil && exists {
-			slog.Warn("Bucket already exists: %s\n", bucketName)
+			slog.Warn("Bucket already exists: %s\n", cnf.MINIO_BUCKET_NAME)
 		} else {
-			slog.Error("Error while making bucket %s: %v\n", bucketName, err)
+			slog.Error("Error while making bucket %s: %v\n", cnf.MINIO_BUCKET_NAME, err)
 		}
 	} else {
-		slog.Info("Successfully created bucket: %s\n", bucketName)
+		slog.Info("Successfully created bucket: %s\n", cnf.MINIO_BUCKET_NAME)
 	}
 
 	policy := fmt.Sprintf(`{
@@ -54,9 +52,9 @@ func MinIOConnect(cnf *config.Config) (*MinIO, error) {
 				"Resource": ["arn:aws:s3:::%s/*"]
 			}
 		]
-	}`, bucketName)
+	}`, cnf.MINIO_BUCKET_NAME)
 
-	err = minioClient.SetBucketPolicy(context.Background(), bucketName, policy)
+	err = minioClient.SetBucketPolicy(context.Background(), cnf.MINIO_BUCKET_NAME, policy)
 	if err != nil {
 		slog.Error("Error while setting bucket policy: %v", err)
 		return nil, err
@@ -68,7 +66,7 @@ func MinIOConnect(cnf *config.Config) (*MinIO, error) {
 	}, nil
 }
 
-func (m *MinIO) Upload(fileName, filePath string) (string, error) {
+func (m *MinIO) Upload(cnf config.Config, fileName, filePath string) (string, error) {
 	ext := filepath.Ext(fileName)
 	contentType := mime.TypeByExtension(ext)
 
@@ -76,14 +74,15 @@ func (m *MinIO) Upload(fileName, filePath string) (string, error) {
 		contentType = "application/octet-stream"
 	}
 
-	_, err := m.Client.FPutObject(context.Background(), bucketName, fileName, filePath, minio.PutObjectOptions{ContentType: contentType})
+	_, err := m.Client.FPutObject(context.Background(), cnf.MINIO_BUCKET_NAME, fileName, filePath, minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
-		slog.Error("Error while uploading %s to bucket %s: %v\n", fileName, bucketName, err)
+		slog.Error("Error while uploading %s to bucket %s: %v\n", fileName, cnf.MINIO_BUCKET_NAME, err)
 		return "", err
 	}
 
 	serverHost := "minio"
 	domain := "ccenter.uz"
 	minioURL := fmt.Sprintf("https://%s.%s/%s/%s", serverHost, domain, bucketName, fileName)
+
 	return minioURL, nil
 }
