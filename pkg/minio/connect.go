@@ -3,12 +3,11 @@ package minio
 import (
 	"context"
 	"fmt"
-	"mime"
-	"path/filepath"
+
+	"chatbot/config"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"chatbot/config"
 	"golang.org/x/exp/slog"
 )
 
@@ -23,7 +22,7 @@ func MinIOConnect(cnf *config.Config) (*MinIO, error) {
 
 	minioClient, err := minio.New(cnf.MINIO_ENDPOINT, &minio.Options{
 		Creds:  credentials.NewStaticV4(cnf.MINIO_ACCESS_KEY, cnf.MINIO_SECRET_KEY, ""),
-		Secure: true,
+		Secure: false,
 	})
 	if err != nil {
 		slog.Error("Failed to connect to MinIO: %v", err)
@@ -66,23 +65,23 @@ func MinIOConnect(cnf *config.Config) (*MinIO, error) {
 	}, nil
 }
 
-func (m *MinIO) Upload(cnf config.Config, fileName, filePath string) (string, error) {
-	ext := filepath.Ext(fileName)
-	contentType := mime.TypeByExtension(ext)
-
-	if contentType == "" {
-		contentType = "application/octet-stream"
-	}
-
-	_, err := m.Client.FPutObject(context.Background(), cnf.MINIO_BUCKET_NAME, fileName, filePath, minio.PutObjectOptions{ContentType: contentType})
+func (m *MinIO) Upload(fileName, filePath string) (string, error) {
+	_, err := m.Client.FPutObject(
+		context.Background(),
+		m.Cnf.MINIO_BUCKET_NAME,
+		fileName,
+		filePath,
+		minio.PutObjectOptions{},
+	)
 	if err != nil {
-		slog.Error("Error while uploading %s to bucket %s: %v\n", fileName, cnf.MINIO_BUCKET_NAME, err)
 		return "", err
 	}
 
-	serverHost := "minio"
-	domain := "ccenter.uz"
-	minioURL := fmt.Sprintf("https://%s.%s/%s/%s", serverHost, domain, bucketName, fileName)
-
-	return minioURL, nil
+	return fmt.Sprintf(
+		"%s/%s/%s",
+		m.Cnf.MINIO_PUBLIC_URL,
+		m.Cnf.MINIO_BUCKET_NAME,
+		fileName,
+	), nil
 }
+

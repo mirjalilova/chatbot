@@ -70,6 +70,7 @@ type (
 		MINIO_ACCESS_KEY  string `env-required:"true" yaml:"MINIO_ACCESS_KEY" env:"MINIO_ACCESS_KEY"`
 		MINIO_SECRET_KEY  string `env-required:"true" yaml:"MINIO_SECRET_KEY" env:"MINIO_SECRET_KEY"`
 		MINIO_BUCKET_NAME string `env-required:"true" yaml:"MINIO_BUCKET_NAME" env:"MINIO_BUCKET_NAME"`
+		MINIO_PUBLIC_URL  string `env-required:"true" yaml:"MINIO_PUBLIC_URL" env:"MINIO_PUBLIC_URL"`
 	}
 	
 	// // OpenAI -.
