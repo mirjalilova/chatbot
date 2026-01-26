@@ -22,7 +22,7 @@ func MinIOConnect(cnf *config.Config) (*MinIO, error) {
 
 	minioClient, err := minio.New(cnf.MINIO_ENDPOINT, &minio.Options{
 		Creds:  credentials.NewStaticV4(cnf.MINIO_ACCESS_KEY, cnf.MINIO_SECRET_KEY, ""),
-		Secure: false,
+		Secure: true,
 	})
 	if err != nil {
 		slog.Error("Failed to connect to MinIO: %v", err)

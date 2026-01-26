@@ -15,8 +15,6 @@ services:
         condition: service_started
       selenium:
         condition: service_healthy
-      minio:
-        condition: service_started
   
   selenium: 
     image: selenium/standalone-chrome:latest
@@ -70,22 +68,6 @@ services:
       - DATABASE_URL=${PG_URL}
     networks:
       - chatbot_ntwrk
-  
-  minio:
-    image: minio/minio:latest
-    container_name: minio
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
-    volumes:
-      - minio_data:/data
-    networks:
-      - chatbot_ntwrk
-
 
 networks:
   chatbot_ntwrk: 
@@ -94,7 +76,5 @@ networks:
 
 volumes:
   postgres_data:
-    driver: local
-  minio_data:
     driver: local
 
