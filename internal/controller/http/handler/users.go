@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	middleware "chatbot/internal/controller/http/middlerware"
 	"chatbot/internal/controller/http/token"
 	"chatbot/internal/entity"
 	"chatbot/pkg/cache"
@@ -210,17 +209,13 @@ func (h *Handler) Verify(c *gin.Context) {
 // @Router /users/profile [get]
 func (h *Handler) GetByIdUser(c *gin.Context) {
 
-	claims, err := middleware.ExtractToken(c.Writer, c.Request, h.UseCase.UserRepo)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
-		return
-	}
+	userID := c.GetString("id")
 
-	userID, ok := claims["id"].(string)
-	if !ok || userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-		return
-	}
+if userID == "" {
+	c.JSON(500, gin.H{"error": "identity not found"})
+	return
+}
+
 
 	res, err := h.UseCase.UserRepo.GetById(context.Background(), &entity.ById{Id: userID})
 	if err != nil {

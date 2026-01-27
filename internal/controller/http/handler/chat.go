@@ -1,11 +1,9 @@
 package handler
 
 import (
-	middleware "chatbot/internal/controller/http/middlerware"
 	"chatbot/internal/entity"
 	"context"
 	"log/slog"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,17 +20,13 @@ import (
 // @Security BearerAuth
 // @Router /chat/room/create [post]
 func (h *Handler) CreateChatRoom(c *gin.Context) {
-	claims, err := middleware.ExtractToken(c.Writer, c.Request, h.UseCase.UserRepo)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
-		return
-	}
+	userID := c.GetString("id")
 
-	userID, ok := claims["id"].(string)
-	if !ok || userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-		return
-	}
+if userID == "" {
+	c.JSON(500, gin.H{"error": "identity not found"})
+	return
+}
+
 
 	reqBody := entity.ChatRoomCreate{
 		UserId: userID,
@@ -65,17 +59,13 @@ func (h *Handler) CreateChatRoom(c *gin.Context) {
 // @Router /chat/user_id [get]
 func (h *Handler) GetChatRoomsByUserId(c *gin.Context) {
 
-	claims, err := middleware.ExtractToken(c.Writer, c.Request, h.UseCase.UserRepo)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
-		return
-	}
+	userID := c.GetString("id")
 
-	userID, ok := claims["id"].(string)
-	if !ok || userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-		return
-	}
+if userID == "" {
+	c.JSON(500, gin.H{"error": "identity not found"})
+	return
+}
+
 
 	offset := c.Query("offset")
 	limit := c.Query("limit")
