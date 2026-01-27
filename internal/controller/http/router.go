@@ -92,19 +92,24 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 	// engine.GET("/responce/list", handlerV1.GetAllChats)
 	// engine.POST("/chats/accept", handlerV1.AcceptResponse)
 
+	engine.Use(
+		middleware.Identity(handlerV1.UseCase.UserRepo),
+		middleware.Authorize(enforcer),
+	)
+
 	engine.POST("/img-upload", handlerV1.UploadFile)
 
 	users := engine.Group("/users")
 	{
 		users.POST("/login", handlerV1.Login)
 		users.POST("/verify", handlerV1.Verify)
-		users.GET("/profile", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.GetByIdUser)
-		users.GET("/list", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.GetAllUsers)
+		users.GET("/profile", handlerV1.GetByIdUser)
+		users.GET("/list", handlerV1.GetAllUsers)
 		// users.POST("/register", handlerV1.Register)
-		users.PUT("/update", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.UpdateUser)
-		users.DELETE("/delete", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.DeleteUser)
-		users.POST("/logout", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.Logout)
-		users.GET("/me", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.GetMe)
+		users.PUT("/update", handlerV1.UpdateUser)
+		users.DELETE("/delete", handlerV1.DeleteUser)
+		users.POST("/logout", handlerV1.Logout)
+		users.GET("/me", handlerV1.GetMe)
 	}
 
 	restrictions := engine.Group("/restrictions")
@@ -116,10 +121,10 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 
 	chat := engine.Group("/chat")
 	{
-		chat.POST("/room/create", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.CreateChatRoom)
-		chat.DELETE("/room/delete", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.DeleteChatRoom)
-		chat.GET("/user_id", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.GetChatRoomsByUserId)
-		chat.GET("/message", middleware.NewAuth(enforcer, handlerV1.UseCase.UserRepo), handlerV1.GetChatRoomChat)
+		chat.POST("/room/create", handlerV1.CreateChatRoom)
+		chat.DELETE("/room/delete", handlerV1.DeleteChatRoom)
+		chat.GET("/user_id", handlerV1.GetChatRoomsByUserId)
+		chat.GET("/message", handlerV1.GetChatRoomChat)
 	}
 
 	engine.GET("/ws/:chat_room_id", handlerV1.ChatWS)

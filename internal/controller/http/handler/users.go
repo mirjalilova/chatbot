@@ -328,39 +328,32 @@ func (h *Handler) GetAllUsers(c *gin.Context) {
 // @Router /users/me [get]
 func (h *Handler) GetMe(c *gin.Context) {
 
-	claims, err := middleware.ExtractToken(c.Writer, c.Request, h.UseCase.UserRepo)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing or invalid"})
-		return
-	}
+    id := c.GetString("id")
+    role := c.GetString("role")
 
-	userID, ok := claims["id"].(string)
-	if !ok || userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found in token"})
-		return
-	}
+    if id == "" {
+        c.JSON(500, gin.H{"error": "identity not found"})
+        return
+    }
 
-	res, err := h.UseCase.UserRepo.GetMe(context.Background(), userID)
-	if err != nil {
-		c.JSON(500, gin.H{"Error getting User info: ": err.Error()})
-		slog.Error("Error getting User info: ", "err", err)
-		return
-	}
+    res, err := h.UseCase.UserRepo.GetMe(c.Request.Context(), id)
+    if err != nil {
+        c.JSON(500, gin.H{"error": err.Error()})
+        return
+    }
 
-	remaining, err := h.UseCase.ChatRepo.Check(context.Background(), userID, "")
-	res.Limit = remaining
-	if err != nil {
-		if err.Error() == "sizning 3 ta bepul so‘rovingiz tugadi, davom etish uchun ro‘yxatdan o‘ting" || err.Error() == "kunlik limiti tugadi" {
-			res.Limit = remaining
-		}
-		c.JSON(500, gin.H{"Error checking chat permissions: ": err.Error()})
-		slog.Error("Error checking chat permissions: ", "err", err.Error())
-		return
-	}
+    remaining, _ := h.UseCase.ChatRepo.Check(
+        c.Request.Context(),
+        id,
+        "",
+    )
 
-	slog.Info("User info retrieved successfully")
-	c.JSON(200, res)
+    res.Role = role
+    res.Limit = remaining
+
+    c.JSON(200, res)
 }
+
 
 // DeleteUser godoc
 // @Summary Delete a User

@@ -76,7 +76,7 @@ func (h *Handler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	minioURL, err := h.MinIO.Upload(fileName, tempFilePath)
+	minioURL, err := h.MinIO.Upload(id, tempFilePath)
 	if err != nil {
 		slog.Error("Error uploading to MinIO", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload to MinIO"})
