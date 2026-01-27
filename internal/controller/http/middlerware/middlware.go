@@ -60,6 +60,12 @@ func Identity(userRepo usecase.UserRepoI) gin.HandlerFunc {
 
 func Authorize(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		if c.Request.Method == http.MethodOptions {
+			c.Next()
+			return
+		}
+
 		role := c.GetString("role")
 		path := c.FullPath()
 		method := c.Request.Method
@@ -73,3 +79,4 @@ func Authorize(enforcer *casbin.Enforcer) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
