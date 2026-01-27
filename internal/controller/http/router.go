@@ -83,14 +83,25 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 
 	if enforcer == nil {
 		slog.Error("Enforcer is nil after initialization!")
-	} else {
-		slog.Info("Enforcer initialized successfully.")
+		} else {
+			slog.Info("Enforcer initialized successfully.")
+		}
+		
+		// Routes
+		
+		// engine.GET("/responce/list", handlerV1.GetAllChats)
+		// engine.POST("/chats/accept", handlerV1.AcceptResponse)
+	engine.GET("/ws/:chat_room_id", handlerV1.ChatWS)
+	
+	engine.POST("/users/login", handlerV1.Login)
+	engine.POST("/users/verify", handlerV1.Verify)
+
+	restrictions := engine.Group("/restrictions")
+	{
+		restrictions.GET("/get", handlerV1.GetRestrictionByID)
+		restrictions.GET("/list", handlerV1.GetAllRestrictions)
+		restrictions.PUT("/update", handlerV1.UpdateRestriction)
 	}
-
-	// Routes
-
-	// engine.GET("/responce/list", handlerV1.GetAllChats)
-	// engine.POST("/chats/accept", handlerV1.AcceptResponse)
 
 	engine.Use(
 		middleware.Identity(handlerV1.UseCase.UserRepo),
@@ -101,8 +112,6 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 
 	users := engine.Group("/users")
 	{
-		users.POST("/login", handlerV1.Login)
-		users.POST("/verify", handlerV1.Verify)
 		users.GET("/profile", handlerV1.GetByIdUser)
 		users.GET("/list", handlerV1.GetAllUsers)
 		// users.POST("/register", handlerV1.Register)
@@ -112,12 +121,6 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 		users.GET("/me", handlerV1.GetMe)
 	}
 
-	restrictions := engine.Group("/restrictions")
-	{
-		restrictions.GET("/get", handlerV1.GetRestrictionByID)
-		restrictions.GET("/list", handlerV1.GetAllRestrictions)
-		restrictions.PUT("/update", handlerV1.UpdateRestriction)
-	}
 
 	chat := engine.Group("/chat")
 	{
@@ -127,7 +130,6 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 		chat.GET("/message", handlerV1.GetChatRoomChat)
 	}
 
-	engine.GET("/ws/:chat_room_id", handlerV1.ChatWS)
 	// dashboard := engine.Group("/dashboard")
 	// {
 	// 	dashboard.GET("/active-users", handlerV1.DashboardActiveUsers)
