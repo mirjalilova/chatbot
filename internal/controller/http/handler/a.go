@@ -69,18 +69,16 @@ func (h *Handler) ChatWS(c *gin.Context) {
 				return
 		}
 
-
-		organizations, err := cache.GetChatOrganizations(h.Redis, ctx, "o"+chatRoomID, int64(5))
+		var organizations []cache.Organization
+		organizations, err = cache.GetChatOrganizations(
+			h.Redis,
+			ctx,
+			"o"+chatRoomID,
+			5,
+		)
 		if err != nil {
-			err = conn.WriteJSON(map[string]any{
-						"type":  "error",
-						"message": err.Error(),
-					})
-					if err != nil {
-						slog.Warn("Failed to get organizations", "error", err)
-						break
-					}
-				return
+			slog.Warn("Failed to get organizations", "error", err)
+			organizations = nil
 		}
 
 

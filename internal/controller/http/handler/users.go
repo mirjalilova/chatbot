@@ -174,7 +174,7 @@ func (h *Handler) Verify(c *gin.Context) {
 		return
 	}
 
-	tokenStr := token.GenerateJWTToken(user.Id, user.Role)
+	tokenStr := token.GenerateJWTToken(user.Id, user.Role, 2)
 
 	cookie := &http.Cookie{
 		Name:     "access_token",
@@ -323,32 +323,31 @@ func (h *Handler) GetAllUsers(c *gin.Context) {
 // @Router /users/me [get]
 func (h *Handler) GetMe(c *gin.Context) {
 
-    id := c.GetString("id")
-    role := c.GetString("role")
+	id := c.GetString("id")
+	role := c.GetString("role")
 
-    if id == "" {
-        c.JSON(500, gin.H{"error": "identity not found"})
-        return
-    }
+	if id == "" {
+		c.JSON(500, gin.H{"error": "identity not found"})
+		return
+	}
 
-    res, err := h.UseCase.UserRepo.GetMe(c.Request.Context(), id)
-    if err != nil {
-        c.JSON(500, gin.H{"error": err.Error()})
-        return
-    }
+	res, err := h.UseCase.UserRepo.GetMe(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
 
-    remaining, _ := h.UseCase.ChatRepo.Check(
-        c.Request.Context(),
-        id,
-        "",
-    )
+	remaining, _ := h.UseCase.ChatRepo.Check(
+		c.Request.Context(),
+		id,
+		"",
+	)
 
-    res.Role = role
-    res.Limit = remaining
+	res.Role = role
+	res.Limit = remaining
 
-    c.JSON(200, res)
+	c.JSON(200, res)
 }
-
 
 // DeleteUser godoc
 // @Summary Delete a User

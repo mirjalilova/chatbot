@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -66,7 +67,13 @@ func AppendChatOrganization(r *redis.Client, ctx context.Context, chatID string,
 	}).Err()
 }
 
-func GetChatOrganizations(r *redis.Client, ctx context.Context, chatID string, lastN int64) ([]Organization, error) {
+func GetChatOrganizations(
+	r *redis.Client,
+	ctx context.Context,
+	chatID string,
+	lastN int64,
+) ([]Organization, error) {
+
 	orgSetKey := fmt.Sprintf("chat:%s:organizations", chatID)
 
 	keys, err := r.ZRevRange(ctx, orgSetKey, 0, lastN-1).Result()
@@ -75,21 +82,30 @@ func GetChatOrganizations(r *redis.Client, ctx context.Context, chatID string, l
 	}
 
 	var organizations []Organization
+
 	for _, key := range keys {
 		val, err := r.Get(ctx, key).Result()
 		if err == redis.Nil {
 			_, _ = r.ZRem(ctx, orgSetKey, key).Result()
 			continue
-		} else if err != nil {
+		}
+		if err != nil {
 			return nil, err
 		}
 
 		var org Organization
-		if err := json.Unmarshal([]byte(val), &org); err != nil {
-			return nil, err
+		if err := json.Unmarshal([]byte(val), &org); err == nil {
+			organizations = append(organizations, org)
+			continue
 		}
 
-		organizations = append(organizations, org)
+		var orgs []Organization
+		if err := json.Unmarshal([]byte(val), &orgs); err == nil {
+			organizations = append(organizations, orgs...)
+			continue
+		}
+
+		slog.Warn("Invalid organization JSON in cache", "value", val)
 	}
 
 	return organizations, nil

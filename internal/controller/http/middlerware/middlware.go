@@ -40,7 +40,7 @@ func Identity(userRepo usecase.UserRepoI) gin.HandlerFunc {
 			}
 		}
 
-		tokens := token.GenerateJWTToken(guestID, "guest")
+		tokens := token.GenerateJWTToken(guestID, "guest", 2)
 		http.SetCookie(c.Writer, &http.Cookie{
 			Name:     "access_token",
 			Value:    tokens.AccessToken,
