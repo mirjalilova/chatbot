@@ -3,6 +3,7 @@ p, unauthorized, /,                          GET
 p, unauthorized, /users/login,               POST
 p, user, /users/login,               POST
 p, guest, /users/login,               POST
+p, user, /img-upload,               POST
 
 p, guest, /users/me,                         GET
 p, guest, /chat/user_id,                     GET
