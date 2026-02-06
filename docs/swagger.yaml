@@ -67,6 +67,8 @@ definitions:
     properties:
       avatar:
         type: string
+      email:
+        type: string
       full_name:
         type: string
       language:
@@ -75,6 +77,13 @@ definitions:
         type: integer
       role:
         type: string
+    type: object
+  entity.GoogleLoginReq:
+    properties:
+      id_token:
+        type: string
+    required:
+    - id_token
     type: object
   entity.LoginReq:
     properties:
@@ -128,6 +137,8 @@ definitions:
       avatar:
         type: string
       created_at:
+        type: string
+      email:
         type: string
       full_name:
         type: string
@@ -438,6 +449,42 @@ paths:
       security:
       - BearerAuth: []
       summary: Delete a User
+      tags:
+      - Users
+  /users/google/login:
+    post:
+      consumes:
+      - application/json
+      description: Login or register user using Google ID Token
+      parameters:
+      - description: Google ID Token
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/entity.GoogleLoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login with Google
       tags:
       - Users
   /users/list:

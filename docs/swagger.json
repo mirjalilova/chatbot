@@ -453,6 +453,61 @@
                 }
             }
         },
+        "/users/google/login": {
+            "post": {
+                "description": "Login or register user using Google ID Token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Login with Google",
+                "parameters": [
+                    {
+                        "description": "Google ID Token",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.GoogleLoginReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/list": {
             "get": {
                 "security": [
@@ -887,6 +942,9 @@
                 "avatar": {
                     "type": "string"
                 },
+                "email": {
+                    "type": "string"
+                },
                 "full_name": {
                     "type": "string"
                 },
@@ -897,6 +955,17 @@
                     "type": "integer"
                 },
                 "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.GoogleLoginReq": {
+            "type": "object",
+            "required": [
+                "id_token"
+            ],
+            "properties": {
+                "id_token": {
                     "type": "string"
                 }
             }
@@ -981,6 +1050,9 @@
                     "type": "string"
                 },
                 "created_at": {
+                    "type": "string"
+                },
+                "email": {
                     "type": "string"
                 },
                 "full_name": {

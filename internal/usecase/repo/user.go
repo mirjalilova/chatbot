@@ -12,6 +12,8 @@ import (
 	"chatbot/config"
 	"chatbot/internal/entity"
 	"chatbot/pkg/postgres"
+
+	"github.com/jackc/pgx/v4"
 )
 
 type UserRepo struct {
@@ -340,4 +342,74 @@ func (r *UserRepo) GetMe(ctx context.Context, id string) (*entity.GetMe, error) 
 	}
 
 	return &res, nil
+}
+
+func (r *UserRepo) GetByEmail(
+	ctx context.Context,
+	email string,
+) (*entity.UserInfo, error) {
+
+	query := `
+		SELECT 
+			id,
+			email,
+			full_name,
+			avatar,
+			role,
+			created_at
+		FROM users
+		WHERE email = $1 AND deleted_at IS NULL
+	`
+
+	var u entity.UserInfo
+
+	err := r.pg.Pool.QueryRow(ctx, query, email).Scan(
+		&u.ID,
+		&u.Email,
+		&u.FullName,
+		&u.Avatar,
+		&u.Role,
+		&u.CreatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+func (r *UserRepo) CreateGoogleUser(
+	ctx context.Context,
+	u *entity.CreateGoogleUser,
+) (string, error) {
+
+	query := `
+		INSERT INTO users (
+			email,
+			full_name,
+			avatar
+		)
+		VALUES ($1, $2, $3)
+		RETURNING id
+	`
+
+	var id string
+
+	err := r.pg.Pool.QueryRow(
+		ctx,
+		query,
+		u.Email,
+		u.FullName,
+		u.Avatar,
+	).Scan(&id)
+
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
 }

@@ -24,6 +24,9 @@ type (
 		Delete(ctx context.Context, req *entity.ById) error
 		GetByPhone(ctx context.Context, phone string) (*entity.GetByPhone, error)
 		GetMe(ctx context.Context, id string) (*entity.GetMe, error)
+
+		GetByEmail(ctx context.Context, email string) (*entity.UserInfo, error)
+		CreateGoogleUser(ctx context.Context, u *entity.CreateGoogleUser) (string, error)
 	}
 
 	// RestrictionRepo -.

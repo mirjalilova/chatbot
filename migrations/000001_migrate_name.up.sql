@@ -3,7 +3,8 @@ CREATE TYPE role AS ENUM ('guest', 'user', 'admin', 'pro-user', 'business-user')
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name VARCHAR(200),
-  phone_number VARCHAR(13) UNIQUE NOT NULL,
+  phone_number VARCHAR(13) UNIQUE,
+  email VARCHAR(255) UNIQUE,
   role role NOT NULL DEFAULT 'user',
   avatar TEXT,
   language TEXT NOT NULL DEFAULT 'en',

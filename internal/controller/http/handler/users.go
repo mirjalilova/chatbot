@@ -12,6 +12,7 @@ import (
 
 	"chatbot/internal/controller/http/token"
 	"chatbot/internal/entity"
+	"chatbot/pkg/auth"
 	"chatbot/pkg/cache"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,84 @@ const phoneRegex = `^(\+998)?[0-9]{9}$`
 func isValidPhone(phone string) bool {
 	re := regexp.MustCompile(phoneRegex)
 	return re.MatchString(phone)
+}
+
+// GoogleLogin godoc
+// @Summary Login with Google
+// @Description Login or register user using Google ID Token
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body entity.GoogleLoginReq true "Google ID Token"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /users/google/login [post]
+func (h *Handler) GoogleLogin(c *gin.Context) {
+	var req entity.GoogleLoginReq
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	googlePayload, err := auth.VerifyGoogleIDToken(
+		c.Request.Context(),
+		req.IDToken,
+		h.Config.Google.ClientID,
+	)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Invalid Google token"})
+		return
+	}
+
+	if !googlePayload.EmailVerified {
+		c.JSON(401, gin.H{"error": "Email not verified"})
+		return
+	}
+
+	user, err := h.UseCase.UserRepo.GetByEmail(
+		context.Background(),
+		googlePayload.Email,
+	)
+
+	if err != nil {
+		_, err = h.UseCase.UserRepo.CreateGoogleUser(
+			context.Background(),
+			&entity.CreateGoogleUser{
+				Email:    googlePayload.Email,
+				FullName: googlePayload.Name,
+				Avatar:   googlePayload.Picture,
+			},
+		)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to create user"})
+			return
+		}
+
+		user, _ = h.UseCase.UserRepo.GetByEmail(
+			context.Background(),
+			googlePayload.Email,
+		)
+	}
+
+	tokenPair := token.GenerateJWTToken(user.ID, user.Role, 24)
+
+	cookie := &http.Cookie{
+		Name:     "access_token",
+		Value:    tokenPair.AccessToken,
+		Path:     "/",
+		Domain:   "ccenter.uz",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+		MaxAge:   24 * 3600,
+	}
+
+	http.SetCookie(c.Writer, cookie)
+
+	c.JSON(200, gin.H{
+		"message": "Login successful",
+	})
 }
 
 // // Register godoc

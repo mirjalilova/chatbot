@@ -9,7 +9,8 @@ type CreateUser struct {
 type UserInfo struct {
 	ID          string  `json:"id"`
 	FullName    *string `json:"full_name"`
-	PhoneNumber *string  `json:"phone_number"`
+	Email       *string `json:"email"`
+	PhoneNumber *string `json:"phone_number"`
 	Role        string  `json:"role"`
 	Avatar      *string `json:"avatar"`
 	CreatedAt   string  `json:"created_at"`
@@ -18,6 +19,7 @@ type UserInfo struct {
 type GetMe struct {
 	FullName *string `json:"full_name"`
 	Role     string  `json:"role"`
+	Email       *string `json:"email"`
 	Avatar   *string `json:"avatar"`
 	Language string  `json:"language"`
 	Limit    int     `json:"limit"`
@@ -28,14 +30,14 @@ type UpdateUser struct {
 	FullName    string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`
 	Avatar      string `json:"avatar"`
-	Language string  `json:"language"`
+	Language    string `json:"language"`
 }
 
 type UpdateUserBody struct {
 	FullName    string `json:"full_name"`
 	PhoneNumber string `json:"phone_number"`
 	Avatar      string `json:"avatar"`
-	Language string  `json:"language"`
+	Language    string `json:"language"`
 }
 
 type UserList struct {
@@ -60,4 +62,14 @@ type LoginRes struct {
 type GetByPhone struct {
 	Id   string `json:"id"`
 	Role string `json:"role"`
+}
+
+type GoogleLoginReq struct {
+	IDToken string `json:"id_token" binding:"required"`
+}
+
+type CreateGoogleUser struct {
+	Email    string
+	FullName string
+	Avatar   string
 }

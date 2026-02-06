@@ -18,6 +18,7 @@ type (
 		PerplexityAPIKey `yaml:"perplexity_api_key"`
 		SMS_TOKEN        `yaml:"sms_token"`
 		Minio  `yaml:"minio"`
+		Google 	`yaml:"google"`
 		// OpenAI `yaml:"openai"`
 	}
 
@@ -61,6 +62,11 @@ type (
 	// SMS_TOKEN -.
 	SMS_TOKEN struct {
 		Token string `env-required:"true" yaml:"token" env:"SMS_TOKEN"`
+	}
+
+	// GoogleConfig -.
+	Google struct {
+		ClientID     string `env-required:"true" yaml:"client_id" env:"GOOGLE_CLIENT_ID"`
 	}
 
 	
