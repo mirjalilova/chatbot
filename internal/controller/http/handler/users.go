@@ -39,6 +39,7 @@ func isValidPhone(phone string) bool {
 func (h *Handler) GoogleLogin(c *gin.Context) {
 	var req entity.GoogleLoginReq
 	if err := c.BindJSON(&req); err != nil {
+		slog.Error("Error binding request body: ", "err", err)
 		c.JSON(400, gin.H{"error": "Invalid request"})
 		return
 	}
@@ -49,11 +50,13 @@ func (h *Handler) GoogleLogin(c *gin.Context) {
 		h.Config.Google.ClientID,
 	)
 	if err != nil {
+		slog.Error("Error verifying Google ID token: ", "err", err)
 		c.JSON(401, gin.H{"error": "Invalid Google token"})
 		return
 	}
 
 	if !googlePayload.EmailVerified {
+		slog.Error("Email not verified for Google account: ", "email", googlePayload.Email)
 		c.JSON(401, gin.H{"error": "Email not verified"})
 		return
 	}
@@ -62,25 +65,35 @@ func (h *Handler) GoogleLogin(c *gin.Context) {
 		context.Background(),
 		googlePayload.Email,
 	)
-
 	if err != nil {
-		_, err = h.UseCase.UserRepo.CreateGoogleUser(
+		slog.Error("Error getting user by email: ", "err", err)
+		c.JSON(500, gin.H{"error": "Server error"})
+		return
+	}
+
+	if user == nil  {
+		if _, err := h.UseCase.UserRepo.CreateGoogleUser(
 			context.Background(),
 			&entity.CreateGoogleUser{
 				Email:    googlePayload.Email,
 				FullName: googlePayload.Name,
 				Avatar:   googlePayload.Picture,
 			},
-		)
-		if err != nil {
+		); err != nil {
+			slog.Error("Error creating user from Google login: ", "err", err)
 			c.JSON(500, gin.H{"error": "Failed to create user"})
 			return
 		}
 
-		user, _ = h.UseCase.UserRepo.GetByEmail(
+		user, err = h.UseCase.UserRepo.GetByEmail(
 			context.Background(),
 			googlePayload.Email,
 		)
+		if err != nil {
+			slog.Error("Error getting user after creating Google user: ", "err", err)
+			c.JSON(500, gin.H{"error": "Failed to get user"})
+			return
+		}
 	}
 
 	tokenPair := token.GenerateJWTToken(user.ID, user.Role, 24)

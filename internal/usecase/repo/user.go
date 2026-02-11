@@ -358,10 +358,11 @@ func (r *UserRepo) GetByEmail(
 			role,
 			created_at
 		FROM users
-		WHERE email = $1 AND deleted_at IS NULL
+		WHERE email = $1 AND deleted_at = 0
 	`
 
 	var u entity.UserInfo
+	var createdAt time.Time
 
 	err := r.pg.Pool.QueryRow(ctx, query, email).Scan(
 		&u.ID,
@@ -369,15 +370,17 @@ func (r *UserRepo) GetByEmail(
 		&u.FullName,
 		&u.Avatar,
 		&u.Role,
-		&u.CreatedAt,
+		&createdAt,
 	)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, err
+			return nil, nil
 		}
 		return nil, err
 	}
+
+	u.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
 
 	return &u, nil
 }

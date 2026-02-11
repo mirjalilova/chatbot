@@ -95,6 +95,7 @@ func NewRouter(engine *gin.Engine, config *config.Config, useCase *usecase.UseCa
 	
 	engine.POST("/users/login", handlerV1.Login)
 	engine.POST("/users/verify", handlerV1.Verify)
+	engine.POST("/users/google/login", handlerV1.GoogleLogin)
 
 	restrictions := engine.Group("/restrictions")
 	{
