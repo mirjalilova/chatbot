@@ -45,7 +45,7 @@ func Identity(userRepo usecase.UserRepoI) gin.HandlerFunc {
 			Name:     "access_token",
 			Value:    tokens.AccessToken,
 			Path:     "/",
-			Domain:   "ccenter.uz",
+			Domain:   "kontaktmarkazi.uz",
 			HttpOnly: true,
 			Secure:   true,
 			SameSite: http.SameSiteNoneMode,
